@@ -3,7 +3,7 @@ const promClient = require('prom-client')
 
 class Prometheus {
   constructor() {
-
+    this._initMetrics()
   }
 
   startCollection() {
@@ -20,11 +20,15 @@ class Prometheus {
 		})
 	}
 
-	totalTransfers() {
-    return new promClient.Histogram({
-      name: 'polkadot_account_transfer_total',
+  increaseTotalTransactions(sender_name, sender_address) {
+    this.totalTransactions.inc({sender_name, sender_address})
+  }
+
+  _initMetrics() {
+    this.totalTransactions = new promClient.Counter({
+      name: 'polkadot_account_transaction_total',
       help: 'Total number of transfers from an account',
-      labels: ['sender_name', 'sender_address']
+      labelNames: ['sender_name', 'sender_address']
     })
   }
 }
