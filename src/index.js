@@ -1,24 +1,20 @@
-const express = require('express')
+#!/usr/bin/env node
 
-const { Subscriber } = require('./subscriber')
-const { Prometheus } = require('./prometheus')
+const process = require('process')
+const program = require('commander')
 
-const endpoint = 'wss://serinus-5.kusama.network'
-const port = 6400
+const start = require('./actions/start')
 
-async function run() {
-  const server = new express()
-  server.get('/healthcheck', async(req, res) => {
-    res.status(200).send('OK!')
-  })
-  server.listen(port)
 
-  const prometheus = new Prometheus()
-	prometheus.injectMetricsRoute(server)
-	prometheus.startCollection()
+program
+  .command('start')
+  .description('Starts the watcher.')
+  .option('-c, --config [path]', 'Path to config file.', './config/main.yaml')
+  .action(start.do)
 
-  const subscriber = new Subscriber(endpoint)
-  await subscriber.start()
+program.allowUnknownOption(false)
+
+const parsed = program.parse(process.argv)
+if (! parsed || !(parsed.args && parsed.args.length > 0 && (typeof (parsed.args[0] === 'object')))) {
+  program.outputHelp()
 }
-
-run()
