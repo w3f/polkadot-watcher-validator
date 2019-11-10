@@ -14,4 +14,4 @@ program
 
 program.allowUnknownOption(false)
 
-const parsed = program.parse(process.argv)
+program.parse(process.argv)
