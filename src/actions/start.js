@@ -19,7 +19,12 @@ module.exports = {
     prometheus.injectMetricsRoute(server)
     prometheus.startCollection()
 
-    const subscriber = new Subscriber(cfg.endpoint, cfg.subscribe)
+    const subscriberCfg = {
+      endpoint: cfg.endpoint,
+      subscribe: cfg.subscribe,
+      prometheus
+    }
+    const subscriber = new Subscriber(subscriberCfg)
     await subscriber.start()
   }
 }

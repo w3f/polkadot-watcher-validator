@@ -3,10 +3,17 @@ const { ApiPromise, WsProvider } = require('@polkadot/api')
 const { asyncForEach } = require('./async')
 
 class Subscriber {
-  constructor(endpoint, subscribe) {
-    this.provider = new WsProvider(endpoint)
-    this.subscribe = subscribe
+  constructor(cfg) {
+    this.provider = new WsProvider(cfg.endpoint)
+    this.subscribe = cfg.subscribe
+    this.prometheus = cfg.prometheus
     this.unsubscribe = {}
+
+    this.isInitialized = {}
+    this.isInitialized['transactions'] = {}
+    this.subscribe.transactions.forEach((account) => {
+      this.isInitialized['transactions'][account.name] = false
+    })
   }
 
   async start() {
@@ -33,6 +40,12 @@ class Subscriber {
     await asyncForEach(accounts, async (account) => {
       const unsub = await this.api.query.system.accountNonce(account.address, (nonce) => {
         console.log(`The nonce for ${account.name} is ${nonce}`)
+        if (this.isInitialized['transactions'][account.name]) {
+          console.log(`New transaction from ${account.name}`)
+          this.prometheus.increaseTotalTransactions(account.name, account.address)
+        } else {
+          this.isInitialized['transactions'][account.name] = true
+        }
       })
       this.unsubscribe.transactions.push(unsub)
     })
