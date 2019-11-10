@@ -1,13 +1,13 @@
 const express = require('express')
 
-const config = require('../config')
-const { Subscriber } = require('./subscriber')
-const { Prometheus } = require('./prometheus')
+const { Config } = require('../config')
+const { Subscriber } = require('../subscriber')
+const { Prometheus } = require('../prometheus')
 
 
 module.exports = {
   do: async (cmd) => {
-    const cfg = config.read(cmd.config)
+    const cfg = Config.parse(cmd.config)
 
     const server = new express()
     server.get('/healthcheck', async(req, res) => {

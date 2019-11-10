@@ -5,7 +5,7 @@ const files = require('./files')
 
 
 class Config {
-  parse(rawCfgPath) {
+  static parse(rawCfgPath) {
     const cfgPath = path.resolve(process.cwd(), rawCfgPath)
     return files.readYAML(cfgPath)
   }
