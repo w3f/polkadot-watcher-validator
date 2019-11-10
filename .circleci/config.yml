@@ -1,6 +1,14 @@
 version: 2
 
 jobs:
+  lint:
+    docker:
+      - image: circleci/node:10.15
+    steps:
+      - checkout
+      - run: yarn
+      - run: yarn lint
+
   buildImage:
     docker:
       - image: web3f/ci-commons:v1.6.0
@@ -46,7 +54,6 @@ jobs:
       - image: web3f/ci-commons:v1.6.0
     steps:
       - checkout
-      - setup_remote_docker
       - run:
           environment:
             GCP_REGION: europe-west3
@@ -57,10 +64,16 @@ workflows:
   version: 2
   test_and_deploy:
     jobs:
+      - lint:
+          filters:
+            tags:
+              only: /.*/
       - buildImage:
           filters:
             tags:
               only: /.*/
+          requires:
+            - lint
       - integrationTests:
           filters:
             tags:
