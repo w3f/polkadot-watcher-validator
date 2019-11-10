@@ -1,0 +1,6 @@
+endpoint: "ws://127.0.0.1:11000"
+port: 3000
+subscribe:
+  transactions:
+  - name: my-account
+    address: 5Ek4z4JErewEQnoSerhp1jhyB5S54UPEY8aYmBkEjzukLBdA
