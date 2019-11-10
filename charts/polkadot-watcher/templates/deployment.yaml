@@ -25,7 +25,8 @@ spec:
         image: {{ .Values.image.repo }}:{{ .Values.image.tag }}
         imagePullPolicy: IfNotPresent
         args:
-        - packages/backend/build/index.js
+        - -c
+        - /app/config/main.yaml
         ports:
         - name: metrics
           containerPort: {{ .Values.port }}
