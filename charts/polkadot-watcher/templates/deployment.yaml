@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: polkadot-watcher
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: polkadot-watcher
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  strategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: polkadot-watcher
+  template:
+    metadata:
+      labels:
+        app: polkadot-watcher
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+    spec:
+      containers:
+      - name: polkadot-watcher
+        image: {{ .Values.image.repo }}:{{ .Values.image.tag }}
+        imagePullPolicy: IfNotPresent
+        args:
+        - packages/backend/build/index.js
+        ports:
+        - name: metrics
+          containerPort: {{ .Values.port }}
+        livenessProbe:
+          httpGet:
+            path: /healthcheck
+            port: {{ .Values.port }}
+          initialDelaySeconds: 3
+          timeoutSeconds: 3
+        {{ if ne .Values.environment "ci" }}
+        resources:
+          limits:
+            cpu: 100m
+            memory: 500Mi
+          requests:
+            cpu: 100m
+            memory: 500Mi
+        {{ end }}
+        volumeMounts:
+        - name: config
+          mountPath: /app/config
+      volumes:
+      - name: config
+        configMap:
+          name: polkadot-watcher

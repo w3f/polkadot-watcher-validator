@@ -1,0 +1,14 @@
+{{ if ne .Values.environment "ci" }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: polkadot-watcher
+  labels:
+    release: prometheus-operator
+spec:
+  selector:
+    matchLabels:
+      app: polkadot-watcher
+  endpoints:
+  - port: metrics
+{{ end }}

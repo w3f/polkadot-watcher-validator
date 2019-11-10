@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: polkadot-watcher
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: polkadot-watcher
+spec:
+  ports:
+  - name: metrics
+    port: {{ .Values.port }}
+  selector:
+    app: polkadot-watcher
