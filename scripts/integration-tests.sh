@@ -11,7 +11,7 @@ run_tests() {
 }
 
 teardown() {
-    helm delete --purge kusama-faucet
+    helm delete --purge polkadot-watcher
 }
 
 main(){
