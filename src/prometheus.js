@@ -24,7 +24,7 @@ class Prometheus {
     return new promClient.Histogram({
       name: 'polkadot_account_transfer_total',
       help: 'Total number of transfers from an account',
-      labels: ['sender', 'receiver']
+      labels: ['sender_name', 'sender_address']
     })
   }
 }
