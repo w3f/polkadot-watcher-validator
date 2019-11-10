@@ -1,0 +1,19 @@
+{{ if ne .Values.environment "ci" }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    app: w3f
+  name: polkadot-watcher
+spec:
+  groups:
+  - name: polkadot-watcher.rules
+    rules:
+    - alert: TransactionSent
+      annotations:
+        message: 'New transaction sent from account {{`{{ $labels.sender_name }}`}}, check https://polkascan.io/pre/kusama-cc2/account/{{`{{ $labels.sender_address }}`}}#transactions for details'
+      expr: increase(polkadot_account_transfer_total[1m]) > 0
+      for: 1m
+      labels:
+        severity: info
+{{ end }}
