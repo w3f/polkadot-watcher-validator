@@ -1,9 +1,12 @@
 const fs = require('fs-extra')
+const path = require('path')
+const yaml = require('js-yaml')
+
 
 module.exports = {
-  readJSON: (filePath) => {
-    const rawContent = fs.readFileSync(filePath)
+  readYAML: (filePath) => {
+    const rawContent = fs.readFileSync(path.resolve(__dirname, filePath))
 
-    return JSON.parse(rawContent)
+    return yaml.safeLoad(rawContent)
   }
 }

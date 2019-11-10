@@ -7,7 +7,7 @@ const files = require('./files')
 class Config {
   parse(rawCfgPath) {
     const cfgPath = path.resolve(process.cwd(), rawCfgPath)
-    return files.readJSON(cfgPath)
+    return files.readYAML(cfgPath)
   }
 }
 
