@@ -15,6 +15,3 @@ program
 program.allowUnknownOption(false)
 
 const parsed = program.parse(process.argv)
-if (! parsed || !(parsed.args && parsed.args.length > 0 && (typeof (parsed.args[0] === 'object')))) {
-  program.outputHelp()
-}
