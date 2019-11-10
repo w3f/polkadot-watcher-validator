@@ -1,5 +1,8 @@
 port: 3000
 namespace: default
+image:
+  repo: web3f/polkadot-watcher
+  tag: latest
 config:
   endpoint: "wss://kusama-rpc.polkadot.io/"
   port: 3000
