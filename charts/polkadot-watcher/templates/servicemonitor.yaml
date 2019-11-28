@@ -4,7 +4,7 @@ kind: ServiceMonitor
 metadata:
   name: polkadot-watcher
   labels:
-    release: prometheus-operator
+{{ toYaml .Values.serviceMonitor.labels | indent 4 }}
 spec:
   selector:
     matchLabels:

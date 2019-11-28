@@ -3,6 +3,7 @@ namespace: default
 image:
   repo: web3f/polkadot-watcher
   tag: latest
+
 config:
   endpoint: "wss://kusama-rpc.polkadot.io/"
   port: 3000
@@ -10,3 +11,11 @@ config:
     transactions:
     - name: my-account
       address: 5Ek4z4JErewEQnoSerhp1jhyB5S54UPEY8aYmBkEjzukLBdA
+
+serviceMonitor:
+  labels:
+    release: prometheus-operator
+
+prometheusRules:
+  labels:
+    app: w3f
