@@ -10,3 +10,4 @@ config:
     transactions:
     - name: my-account
       address: 5Ek4z4JErewEQnoSerhp1jhyB5S54UPEY8aYmBkEjzukLBdA
+networkId: kusama-cc3
