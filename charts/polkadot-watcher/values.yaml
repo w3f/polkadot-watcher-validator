@@ -1,3 +1,4 @@
+environment: production
 port: 3000
 namespace: default
 image:
