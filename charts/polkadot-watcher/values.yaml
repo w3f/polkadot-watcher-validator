@@ -9,8 +9,8 @@ config:
   port: 3000
   subscribe:
     transactions:
-    - name: my-account
-      address: 5Ek4z4JErewEQnoSerhp1jhyB5S54UPEY8aYmBkEjzukLBdA
+    - name: FAUCET
+      address: EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk
 
 serviceMonitor:
   labels:
@@ -19,3 +19,5 @@ serviceMonitor:
 prometheusRules:
   labels:
     app: w3f
+
+networkId: kusama-cc3
