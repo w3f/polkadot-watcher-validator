@@ -16,7 +16,8 @@ serviceMonitor:
   labels:
     release: prometheus-operator
 
-prometheusRulesLabels:
-  app: w3f
+prometheusRules:
+  labels:
+    app: w3f
 
 networkId: kusama-cc3

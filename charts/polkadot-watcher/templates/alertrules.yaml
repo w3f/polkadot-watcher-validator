@@ -3,7 +3,7 @@ apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
   labels:
-{{ toYaml .Values.prometheusRulesLabels | indent 4 }}
+{{ toYaml .Values.prometheusRules.labels | indent 4 }}
   name: polkadot-watcher
 spec:
   groups:
