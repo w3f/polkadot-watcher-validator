@@ -1,8 +1,7 @@
 {
   "name": "polkadot-watcher",
   "version": "0.1.0",
-  "description": "Motitor events on Polkadot networks",
-  "main": "build/index.js",
+  "description": "Monitor events on Polkadot networks",
   "repository": "git@github.com:w3f/polkadot-watcher.git",
   "author": "Federico Gimenez <federico@web3.foundation>",
   "license": "MIT",
