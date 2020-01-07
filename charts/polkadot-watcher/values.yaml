@@ -14,8 +14,8 @@ config:
       address: EMdZSpRK9J79QhPHhxX9Lw1CEPjh48FTvrJHVswmcRf36sa
     - name: "nominator - /ksm/5"
       address: FAc4fT16twXNwC445h515QZeroQZMLepEoBGQQyXXUk2kss
-    - name: GfLwUrzdTCMbkEyTgMWsUCk8nHde1Hb4GBHf8sPA7CwEg7t
-      address: "Sample Distribution"
+    - name: "Sample Distribution"
+      address: GfLwUrzdTCMbkEyTgMWsUCk8nHde1Hb4GBHf8sPA7CwEg7t
     - name: F7uBbx4pbZ5u7eRGPExD6SKSA6TVqTsLf7daXYjAeEChcEY
       address: F7uBbx4pbZ5u7eRGPExD6SKSA6TVqTsLf7daXYjAeEChcEY
     - name: H2VEWnobNUd7KzW6NSpjg4XkCDxPGC5iAmJeZxV1Ly8kdnV
