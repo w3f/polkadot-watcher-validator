@@ -10,24 +10,24 @@ config:
   port: 3000
   subscribe:
     transactions:
+    - name: "nominator - /ksm/4"
+      address: EMdZSpRK9J79QhPHhxX9Lw1CEPjh48FTvrJHVswmcRf36sa
     - name: "nominator - /ksm/5"
       address: FAc4fT16twXNwC445h515QZeroQZMLepEoBGQQyXXUk2kss
+    - name: GfLwUrzdTCMbkEyTgMWsUCk8nHde1Hb4GBHf8sPA7CwEg7t
+      address: "Sample Distribution"
     - name: F7uBbx4pbZ5u7eRGPExD6SKSA6TVqTsLf7daXYjAeEChcEY
       address: F7uBbx4pbZ5u7eRGPExD6SKSA6TVqTsLf7daXYjAeEChcEY
     - name: H2VEWnobNUd7KzW6NSpjg4XkCDxPGC5iAmJeZxV1Ly8kdnV
       address: H2VEWnobNUd7KzW6NSpjg4XkCDxPGC5iAmJeZxV1Ly8kdnV
     - name: EwdN9ycz5ocDZLx1BYKSWQsKPcaQeUmk7oD5EWrmqRpgwAN
       address: EwdN9ycz5ocDZLx1BYKSWQsKPcaQeUmk7oD5EWrmqRpgwAN
-    - name: EMdZSpRK9J79QhPHhxX9Lw1CEPjh48FTvrJHVswmcRf36sa
-      address: EMdZSpRK9J79QhPHhxX9Lw1CEPjh48FTvrJHVswmcRf36sa
     - name: EDHz5PdjufWNnd23oyRDfHR8m833KmxggJjaR7edYm9nuzM
       address: EDHz5PdjufWNnd23oyRDfHR8m833KmxggJjaR7edYm9nuzM
     - name: CdwnRdmqJivB75M4advhMUdxMAaWgoRPhYQiwfSRigw18gc
       address: CdwnRdmqJivB75M4advhMUdxMAaWgoRPhYQiwfSRigw18gc
     - name: F38ahtaeD6SDMJsHW27hkX9n3Cj4t5rBW2dPeMBCxt5oQxd
       address: F38ahtaeD6SDMJsHW27hkX9n3Cj4t5rBW2dPeMBCxt5oQxd
-    - name: GfLwUrzdTCMbkEyTgMWsUCk8nHde1Hb4GBHf8sPA7CwEg7t
-      address: "Sample Distribution"
 
 serviceMonitor:
   labels:
