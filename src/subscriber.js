@@ -42,10 +42,12 @@ class Subscriber {
         console.log(`The nonce for ${account.name} is ${nonce}`)
         if (this.isInitialized['transactions'][account.name]) {
           console.log(`New transaction from ${account.name}`)
-          this.prometheus.increaseTotalTransactions(account.name, account.address)
         } else {
           this.isInitialized['transactions'][account.name] = true
         }
+        // always increase metric even the first time, so that we initialize the time serie
+        // https://github.com/prometheus/prometheus/issues/1673
+        this.prometheus.increaseTotalTransactions(account.name, account.address)
       })
       this.unsubscribe.transactions.push(unsub)
     })
