@@ -12,7 +12,7 @@ spec:
     - alert: TransactionSent
       annotations:
         message: 'New transaction sent from account {{`{{ $labels.sender_name }}`}}, check https://polkascan.io/pre/{{ .Values.networkId }}/account/{{`{{ $labels.sender_address }}`}}#transactions for details'
-      expr: increase(polkadot_account_transaction_total[1m]) > 0
+      expr: sum(max_over_time(polkadot_account_transaction_total[1m]) or vector(0)) - sum(max_over_time(polkadot_account_transaction_total[1m] offset 1m) or vector(0))
       for: 30s
       labels:
         severity: info
