@@ -10,6 +10,14 @@ config:
   port: 3000
   subscribe:
     transactions:
+    - name: "/ksm/0"
+      address: "F7uBbx4pbZ5u7eRGPExD6SKSA6TVqTsLf7daXYjAeEChcEY"
+    - name: "/ksm/1"
+      address: "Cr9qKTCDWHkD9ALjdgain8QsBpCAqK6uVwB13FVoF8c7hKV"
+    - name: "/ksm/2"
+      address: "H2VEWnobNUd7KzW6NSpjg4XkCDxPGC5iAmJeZxV1Ly8kdnV"
+    - name: "/ksm/3"
+      address: "EwdN9ycz5ocDZLx1BYKSWQsKPcaQeUmk7oD5EWrmqRpgwAN"
     - name: "nominator - /ksm/4"
       address: EMdZSpRK9J79QhPHhxX9Lw1CEPjh48FTvrJHVswmcRf36sa
     - name: "nominator - /ksm/5"
