@@ -4,3 +4,6 @@ subscribe:
   transactions:
   - name: faucet
     address: EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk
+  producers:
+  - name: test
+    address: Gt6HqWBhdu4Sy1u8ASTbS1qf2Ac5gwdegwr8tWN8saMxPt5
