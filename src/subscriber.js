@@ -4,7 +4,7 @@ const { asyncForEach } = require('./async')
 
 class Subscriber {
   constructor(cfg) {
-    this.provider = new WsProvider(cfg.endpoint)
+    this.endpoint = cfg.endpoint
     this.subscribe = cfg.subscribe
     this.prometheus = cfg.prometheus
     this.logger = cfg.logger
@@ -13,9 +13,11 @@ class Subscriber {
 
     this.isInitialized = {}
 
-    this.isInitialized['transactions'] = {}
-    this.subscribe.transactions.forEach((account) => {
-      this.isInitialized['transactions'][account.name] = false
+    Object.keys(this.subscribe).forEach((subscription) => {
+      this.isInitialized[subscription] = {}
+      this.subscribe[subscription].forEach((account) => {
+        this.isInitialized[subscription][account.name] = false
+      })
     })
   }
 
@@ -26,7 +28,8 @@ class Subscriber {
   }
 
   async _initAPI() {
-    this.api = await ApiPromise.create({ provider: this.provider })
+    const provider = new WsProvider(this.endpoint)
+    this.api = await ApiPromise.create({ provider })
 
     const [chain, nodeName, nodeVersion] = await Promise.all([
       this.api.rpc.system.chain(),
