@@ -7,9 +7,12 @@ class Subscriber {
     this.provider = new WsProvider(cfg.endpoint)
     this.subscribe = cfg.subscribe
     this.prometheus = cfg.prometheus
+    this.logger = cfg.logger
+
     this.unsubscribe = {}
 
     this.isInitialized = {}
+
     this.isInitialized['transactions'] = {}
     this.subscribe.transactions.forEach((account) => {
       this.isInitialized['transactions'][account.name] = false
@@ -30,7 +33,7 @@ class Subscriber {
       this.api.rpc.system.name(),
       this.api.rpc.system.version()
     ])
-    console.log(
+    this.logger.info(
       `You are connected to chain ${chain} using ${nodeName} v${nodeVersion}`
     )
   }
@@ -39,9 +42,9 @@ class Subscriber {
     this.unsubscribe.transactions = []
     await asyncForEach(accounts, async (account) => {
       const unsub = await this.api.query.system.accountNonce(account.address, (nonce) => {
-        console.log(`The nonce for ${account.name} is ${nonce}`)
+        this.logger.info(`The nonce for ${account.name} is ${nonce}`)
         if (this.isInitialized['transactions'][account.name]) {
-          console.log(`New transaction from ${account.name}`)
+          this.logger.info(`New transaction from ${account.name}`)
         } else {
           this.isInitialized['transactions'][account.name] = true
         }
