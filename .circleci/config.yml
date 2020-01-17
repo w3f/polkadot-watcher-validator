@@ -1,13 +1,13 @@
 version: 2
 
 jobs:
-  lint:
+  unitTest:
     docker:
       - image: circleci/node:10.15
     steps:
       - checkout
       - run: yarn
-      - run: yarn lint
+      - run: yarn test
 
   buildImage:
     docker:
@@ -64,7 +64,7 @@ workflows:
   version: 2
   test_and_deploy:
     jobs:
-      - lint:
+      - unitTest:
           filters:
             tags:
               only: /.*/
@@ -73,13 +73,13 @@ workflows:
             tags:
               only: /.*/
           requires:
-            - lint
+            - unitTest
       - integrationTests:
           filters:
             tags:
               only: /.*/
           requires:
-            - lint
+            - unitTest
       - publishImage:
           filters:
             branches:

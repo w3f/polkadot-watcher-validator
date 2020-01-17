@@ -7,7 +7,9 @@
   "license": "MIT",
   "scripts": {
     "start": "node src/index.js start",
-    "lint": "eslint --ext .js --ignore-path .gitignore ."
+    "lint": "eslint --ext .js --ignore-path .gitignore .",
+    "pretest": "npm run lint",
+    "test": "mocha --reporter spec --recursive"
   },
   "dependencies": {
     "@polkadot/api": "1.0.0-beta.8",
@@ -16,9 +18,13 @@
     "fs-extra": "^8.1.0",
     "js-yaml": "^3.13.1",
     "prom-client": "^11.5.3",
+    "winston": "^3.2.1",
     "ws": "6.1.2"
   },
   "devDependencies": {
-    "eslint": "^6.6.0"
+    "chai": "^4.2.0",
+    "eslint": "^6.6.0",
+    "mocha": "^7.0.0",
+    "sinon": "^8.1.0"
   }
 }
