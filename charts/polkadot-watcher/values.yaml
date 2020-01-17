@@ -8,6 +8,7 @@ image:
 config:
   endpoint: "wss://cc3-3.kusama.network"
   port: 3000
+  logLevel: info
   subscribe:
     transactions:
     - name: "/ksm/0"

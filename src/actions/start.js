@@ -21,6 +21,7 @@ module.exports = {
     prometheus.startCollection()
 
     const logger = winston.createLogger({
+      level: cfg.logLevel || 'info',
       format: winston.format.combine(
         winston.format.timestamp({
           format: 'YYYY-MM-DD HH:mm:ss'

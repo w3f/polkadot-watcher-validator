@@ -1,5 +1,6 @@
 endpoint: "wss://kusama-rpc.polkadot.io/"
 port: 3000
+logLevel: info
 subscribe:
   transactions:
   - name: faucet
