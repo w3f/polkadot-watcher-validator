@@ -24,7 +24,7 @@ class Prometheus {
     this.totalTransactions.inc({sender_name, sender_address})
   }
 
-  increaseTotalblocksProduced(name, account) {
+  increaseTotalBlocksProduced(name, account) {
     this.totalBlocksProduced.inc({name, account})
   }
 
