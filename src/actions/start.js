@@ -1,4 +1,5 @@
 const express = require('express')
+const winston = require('winston')
 
 const { Config } = require('../config')
 const { Subscriber } = require('../subscriber')
@@ -19,10 +20,25 @@ module.exports = {
     prometheus.injectMetricsRoute(server)
     prometheus.startCollection()
 
+    const logger = winston.createLogger({
+      level: cfg.logLevel || 'info',
+      format: winston.format.combine(
+        winston.format.timestamp({
+          format: 'YYYY-MM-DD HH:mm:ss'
+        }),
+        winston.format.errors({ stack: true }),
+        winston.format.printf(info => `${info.timestamp} ${info.level}: ${info.message}`)
+      ),
+      transports: [
+        new winston.transports.Console()
+      ]
+    })
+
     const subscriberCfg = {
       endpoint: cfg.endpoint,
       subscribe: cfg.subscribe,
-      prometheus
+      prometheus,
+      logger
     }
     const subscriber = new Subscriber(subscriberCfg)
     await subscriber.start()
