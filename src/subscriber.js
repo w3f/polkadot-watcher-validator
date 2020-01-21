@@ -24,7 +24,12 @@ class Subscriber {
   async start() {
     await this._initAPI()
 
-    await this._subscribeTransactions(this.subscribe.transactions)
+    if (this.subscribe.transactions) {
+      await this._subscribeTransactions()
+    }
+    if (this.subscribe.producers) {
+      await this._subscribeProducers()
+    }
   }
 
   async _initAPI() {
@@ -41,9 +46,9 @@ class Subscriber {
     )
   }
 
-  async _subscribeTransactions(accounts) {
+  async _subscribeTransactions() {
     this.unsubscribe.transactions = []
-    await asyncForEach(accounts, async (account) => {
+    await asyncForEach(this.subscribe.transactions, async (account) => {
       const unsub = await this.api.query.system.accountNonce(account.address, (nonce) => {
         this.logger.info(`The nonce for ${account.name} is ${nonce}`)
         if (this.isInitialized['transactions'][account.name]) {
@@ -57,6 +62,29 @@ class Subscriber {
       })
       this.unsubscribe.transactions.push(unsub)
     })
+  }
+
+  async _subscribeProducers() {
+    this.unsubscribe.producers = []
+
+    this.subscribe.producers.forEach((account) => {
+      // always increase metric even the first time, so that we initialize the time serie
+      // https://github.com/prometheus/prometheus/issues/1673
+      this.prometheus.increaseTotalBlocksProduced(account.name, account.address)
+    })
+
+    const unsub = this.api.rpc.chain.subscribeNewHeads(async (header) => {
+      // get block author
+      const hash = await this.api.rpc.chain.getBlockHash(header.number)
+      const deriveHeader = await this.api.derive.chain.getHeader(hash)
+      const author = deriveHeader.author
+
+      if(this.subscribe.producers.some((producer) => producer.address == author)) {
+        this.logger.info(`New block produced by ${account.name}`)
+        this.prometheus.increaseTotalBlocksProduced(account.name, account.address)
+      }
+    })
+    this.unsubscribe.producers.push(unsub)
   }
 }
 
