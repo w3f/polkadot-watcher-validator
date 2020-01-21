@@ -79,7 +79,8 @@ class Subscriber {
       const deriveHeader = await this.api.derive.chain.getHeader(hash)
       const author = deriveHeader.author
 
-      if(this.subscribe.producers.some((producer) => producer.address == author)) {
+      const account = this.subscribe.producers.find((producer) => producer.address == author)
+      if (account) {
         this.logger.info(`New block produced by ${account.name}`)
         this.prometheus.increaseTotalBlocksProduced(account.name, account.address)
       }
