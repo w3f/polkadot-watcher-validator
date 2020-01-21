@@ -56,6 +56,7 @@ jobs:
       - checkout
       - run:
           environment:
+            HELM_ENV: production
             GCP_REGION: europe-west3
           command: |
             /scripts/deploy.sh -c engineering
