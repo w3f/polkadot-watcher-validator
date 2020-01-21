@@ -58,7 +58,7 @@ jobs:
           environment:
             GCP_REGION: europe-west3
           command: |
-            ./scripts/deploy.sh
+            /scripts/deploy.sh -c engineering
 
 workflows:
   version: 2
