@@ -2,13 +2,13 @@
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: polkadot-watcher
+  name: {{ .Release.Name }}
   labels:
 {{ toYaml .Values.serviceMonitor.labels | indent 4 }}
 spec:
   selector:
     matchLabels:
-      app: polkadot-watcher
+      app: {{ .Release.Name }}
   endpoints:
   - port: metrics
 {{ end }}

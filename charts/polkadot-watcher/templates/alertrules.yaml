@@ -4,10 +4,10 @@ kind: PrometheusRule
 metadata:
   labels:
 {{ toYaml .Values.prometheusRules.labels | indent 4 }}
-  name: polkadot-watcher
+  name: {{ .Release.Name }}
 spec:
   groups:
-  - name: polkadot-watcher.rules
+  - name: {{ .Release.Name }}.rules
     rules:
     - alert: TransactionSent
       annotations:

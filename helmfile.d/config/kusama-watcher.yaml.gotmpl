@@ -1,3 +1,36 @@
 environment: {{ .Environment.Name }}
 image:
   tag: {{ env "CIRCLE_TAG" }}
+
+config:
+  endpoint: "wss://cc3-3.kusama.network"
+  port: 3000
+  logLevel: info
+  subscribe:
+    transactions:
+    - name: "/ksm/0"
+      address: "F7uBbx4pbZ5u7eRGPExD6SKSA6TVqTsLf7daXYjAeEChcEY"
+    - name: "/ksm/1"
+      address: "Cr9qKTCDWHkD9ALjdgain8QsBpCAqK6uVwB13FVoF8c7hKV"
+    - name: "/ksm/2"
+      address: "H2VEWnobNUd7KzW6NSpjg4XkCDxPGC5iAmJeZxV1Ly8kdnV"
+    - name: "/ksm/3"
+      address: "EwdN9ycz5ocDZLx1BYKSWQsKPcaQeUmk7oD5EWrmqRpgwAN"
+    - name: "nominator - /ksm/4"
+      address: EMdZSpRK9J79QhPHhxX9Lw1CEPjh48FTvrJHVswmcRf36sa
+    - name: "nominator - /ksm/5"
+      address: FAc4fT16twXNwC445h515QZeroQZMLepEoBGQQyXXUk2kss
+    - name: "Sample Distribution"
+      address: GfLwUrzdTCMbkEyTgMWsUCk8nHde1Hb4GBHf8sPA7CwEg7t
+    - name: F7uBbx4pbZ5u7eRGPExD6SKSA6TVqTsLf7daXYjAeEChcEY
+      address: F7uBbx4pbZ5u7eRGPExD6SKSA6TVqTsLf7daXYjAeEChcEY
+    - name: H2VEWnobNUd7KzW6NSpjg4XkCDxPGC5iAmJeZxV1Ly8kdnV
+      address: H2VEWnobNUd7KzW6NSpjg4XkCDxPGC5iAmJeZxV1Ly8kdnV
+    - name: EwdN9ycz5ocDZLx1BYKSWQsKPcaQeUmk7oD5EWrmqRpgwAN
+      address: EwdN9ycz5ocDZLx1BYKSWQsKPcaQeUmk7oD5EWrmqRpgwAN
+    - name: EDHz5PdjufWNnd23oyRDfHR8m833KmxggJjaR7edYm9nuzM
+      address: EDHz5PdjufWNnd23oyRDfHR8m833KmxggJjaR7edYm9nuzM
+    - name: CdwnRdmqJivB75M4advhMUdxMAaWgoRPhYQiwfSRigw18gc
+      address: CdwnRdmqJivB75M4advhMUdxMAaWgoRPhYQiwfSRigw18gc
+    - name: F38ahtaeD6SDMJsHW27hkX9n3Cj4t5rBW2dPeMBCxt5oQxd
+      address: F38ahtaeD6SDMJsHW27hkX9n3Cj4t5rBW2dPeMBCxt5oQxd

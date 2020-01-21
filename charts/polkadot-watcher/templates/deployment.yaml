@@ -1,10 +1,10 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: polkadot-watcher
+  name: {{ .Release.Name }}
   namespace: {{ .Values.namespace }}
   labels:
-    app: polkadot-watcher
+    app: {{ .Release.Name }}
 spec:
   replicas: 1
   revisionHistoryLimit: 3
@@ -12,16 +12,16 @@ spec:
     type: RollingUpdate
   selector:
     matchLabels:
-      app: polkadot-watcher
+      app: {{ .Release.Name }}
   template:
     metadata:
       labels:
-        app: polkadot-watcher
+        app: {{ .Release.Name }}
       annotations:
         checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
     spec:
       containers:
-      - name: polkadot-watcher
+      - name: {{ .Release.Name }}
         image: {{ .Values.image.repo }}:{{ .Values.image.tag }}
         imagePullPolicy: IfNotPresent
         args:
@@ -51,4 +51,4 @@ spec:
       volumes:
       - name: config
         configMap:
-          name: polkadot-watcher
+          name: {{ .Release.Name }}
