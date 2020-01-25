@@ -9,13 +9,6 @@ spec:
   groups:
   - name: {{ .Release.Name }}.rules
     rules:
-    - alert: TransactionSent
-      annotations:
-        message: 'New transaction sent from account {{`{{ $labels.sender_name }}`}}, check https://polkascan.io/pre/{{ .Values.networkId }}/account/{{`{{ $labels.sender_address }}`}}#transactions for details'
-      expr: increase(polkadot_account_transaction_total[2m]) > 0
-      for: 30s
-      labels:
-        severity: info
     - alert: ProducerStallShort
       annotations:
         message: 'Blocks were not produced for 1 hour by {{`{{ $labels.name }}`}}'

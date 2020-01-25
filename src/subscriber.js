@@ -7,6 +7,7 @@ class Subscriber {
     this.endpoint = cfg.endpoint
     this.subscribe = cfg.subscribe
     this.prometheus = cfg.prometheus
+    this.notifier = cfg.notifier
     this.logger = cfg.logger
 
     this.unsubscribe = {}
@@ -53,12 +54,11 @@ class Subscriber {
         this.logger.info(`The nonce for ${account.name} is ${nonce}`)
         if (this.isInitialized['transactions'][account.name]) {
           this.logger.info(`New transaction from ${account.name}`)
+          // send data to notifier
+          this.notifier.newTransaction(account.name, account.address)
         } else {
           this.isInitialized['transactions'][account.name] = true
         }
-        // always increase metric even the first time, so that we initialize the time serie
-        // https://github.com/prometheus/prometheus/issues/1673
-        this.prometheus.increaseTotalTransactions(account.name, account.address)
       })
       this.unsubscribe.transactions.push(unsub)
     })

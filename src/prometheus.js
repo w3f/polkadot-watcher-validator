@@ -20,21 +20,11 @@ class Prometheus {
 		})
 	}
 
-  increaseTotalTransactions(sender_name, sender_address) {
-    this.totalTransactions.inc({sender_name, sender_address})
-  }
-
   increaseTotalBlocksProduced(name, account) {
     this.totalBlocksProduced.inc({name, account})
   }
 
   _initMetrics() {
-    this.totalTransactions = new promClient.Counter({
-      name: 'polkadot_account_transaction_total',
-      help: 'Total number of transfers from an account',
-      labelNames: ['sender_name', 'sender_address']
-    })
-
     this.totalBlocksProduced = new promClient.Counter({
       name: 'polkadot_blocks_produced_total',
       help: 'Total number of blocks produced by a validator',

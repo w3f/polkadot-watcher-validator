@@ -1,6 +1,8 @@
 endpoint: "wss://kusama-rpc.polkadot.io/"
 port: 3000
 logLevel: info
+matrixbot:
+  endpoint: "http://matrixbot:8080/skill/eventmanager/webhook"
 subscribe:
   transactions:
   - name: faucet

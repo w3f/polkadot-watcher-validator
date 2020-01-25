@@ -4,6 +4,7 @@ const winston = require('winston')
 const { Config } = require('../config')
 const { Subscriber } = require('../subscriber')
 const { Prometheus } = require('../prometheus')
+const { Matrixbot } = require('../matrixbot')
 
 
 module.exports = {
@@ -19,6 +20,8 @@ module.exports = {
     const prometheus = new Prometheus()
     prometheus.injectMetricsRoute(server)
     prometheus.startCollection()
+
+    const matrixbot = new Matrixbot(cfg.matrixbot)
 
     const logger = winston.createLogger({
       level: cfg.logLevel || 'info',
@@ -38,6 +41,7 @@ module.exports = {
       endpoint: cfg.endpoint,
       subscribe: cfg.subscribe,
       prometheus,
+      matrixbot,
       logger
     }
     const subscriber = new Subscriber(subscriberCfg)
