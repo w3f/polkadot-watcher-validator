@@ -1,7 +1,7 @@
 endpoint: "wss://kusama-rpc.polkadot.io/"
 port: 3000
 logLevel: info
-networkId: ksmcc3
+networkId: kusama-cc3
 matrixbot:
   endpoint: "http://matrixbot:8080/skill/eventmanager/webhook"
 subscribe:
