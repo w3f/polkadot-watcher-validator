@@ -21,7 +21,7 @@ module.exports = {
     prometheus.injectMetricsRoute(server)
     prometheus.startCollection()
 
-    const matrixbot = new Matrixbot(cfg.matrixbot)
+    const notifier = new Matrixbot(cfg.matrixbot)
 
     const logger = winston.createLogger({
       level: cfg.logLevel || 'info',
@@ -41,8 +41,8 @@ module.exports = {
       endpoint: cfg.endpoint,
       networkId: cfg.networkId,
       subscribe: cfg.subscribe,
+      notifier,
       prometheus,
-      matrixbot,
       logger
     }
     const subscriber = new Subscriber(subscriberCfg)
