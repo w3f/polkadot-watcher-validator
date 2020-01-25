@@ -39,6 +39,7 @@ module.exports = {
 
     const subscriberCfg = {
       endpoint: cfg.endpoint,
+      networkId: cfg.networkId,
       subscribe: cfg.subscribe,
       prometheus,
       matrixbot,
