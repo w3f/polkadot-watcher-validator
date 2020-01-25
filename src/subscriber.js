@@ -5,8 +5,10 @@ const { asyncForEach } = require('./async')
 class Subscriber {
   constructor(cfg) {
     this.endpoint = cfg.endpoint
+    this.networkId = cfg.networkId
     this.subscribe = cfg.subscribe
     this.prometheus = cfg.prometheus
+    this.notifier = cfg.notifier
     this.logger = cfg.logger
 
     this.unsubscribe = {}
@@ -49,16 +51,24 @@ class Subscriber {
   async _subscribeTransactions() {
     this.unsubscribe.transactions = []
     await asyncForEach(this.subscribe.transactions, async (account) => {
-      const unsub = await this.api.query.system.accountNonce(account.address, (nonce) => {
+      const unsub = await this.api.query.system.accountNonce(account.address, async (nonce) => {
         this.logger.info(`The nonce for ${account.name} is ${nonce}`)
         if (this.isInitialized['transactions'][account.name]) {
           this.logger.info(`New transaction from ${account.name}`)
+          // send data to notifier
+          const data = {
+            name: account.name,
+            address: account.address,
+            networkId: this.networkId
+          }
+          try {
+            await this.notifier.newTransaction(data)
+          } catch (e) {
+            this.logger.info(`ERROR: could not notify transaction: ${e.message}`)
+          }
         } else {
           this.isInitialized['transactions'][account.name] = true
         }
-        // always increase metric even the first time, so that we initialize the time serie
-        // https://github.com/prometheus/prometheus/issues/1673
-        this.prometheus.increaseTotalTransactions(account.name, account.address)
       })
       this.unsubscribe.transactions.push(unsub)
     })
