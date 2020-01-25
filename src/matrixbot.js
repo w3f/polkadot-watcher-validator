@@ -7,9 +7,9 @@ class Matrixbot {
   }
 
   newTransaction(data) {
-    const json = _transactionMsg(data)
+    const json = this._transactionMsg(data)
 
-    return _send(json)
+    return this._send(json)
   }
 
   _transactionMsg(data) {
@@ -24,7 +24,7 @@ class Matrixbot {
             "severity": "info"
           },
           "annotations": {
-            "description": `New transaction sent from account ${data.sender}, check https://polkascan.io/pre/${data.networkId}/account/${data.account}#transactions for details`
+            "description": `New transaction sent from account ${data.name}, check https://polkascan.io/pre/${data.networkId}/account/${data.address}#transactions for details`
           }
         }
       ],
@@ -33,9 +33,7 @@ class Matrixbot {
   }
 
   _send(json) {
-    return got.post(this.endpoint, {
-      json
-    })
+    return got.post(this.endpoint, { json })
   }
 }
 
