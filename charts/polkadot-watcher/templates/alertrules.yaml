@@ -13,16 +13,16 @@ spec:
       annotations:
         message: 'Blocks were not produced for 1 hour by {{`{{ $labels.name }}`}}'
         runbook_url: "https://github.com/w3f/infrastructure/wiki/Producer-Stall"
-      expr: increase(polkadot_blocks_produced_total[70m]) == 0
-      for: 10m
+      expr: increase(polkadot_blocks_produced_total[10m]) == 0
+      for: 70m
       labels:
         severity: warning
     - alert: ProducerStallLong
       annotations:
         message: 'Blocks were not produced for 1:30 hours by {{`{{ $labels.name }}`}}'
         runbook_url: "https://github.com/w3f/infrastructure/wiki/Producer-Stall"
-      expr: increase(polkadot_blocks_produced_total[90m]) == 0
-      for: 10m
+      expr: increase(polkadot_blocks_produced_total[10m]) == 0
+      for: 90m
       labels:
         severity: critical
 {{ end }}
