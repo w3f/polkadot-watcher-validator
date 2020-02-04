@@ -25,4 +25,12 @@ spec:
       for: 254m
       labels:
         severity: critical
+    - alert: ValidatorOffline
+      annotations:
+        message: '{{`{{ $labels.name }}`}} was reported offline in session {{`{{ $labels.session }}`}}'
+        runbook_url: "https://github.com/w3f/infrastructure/wiki/Validator-Offline"
+      expr: increase(polkadot_offline_reports_total[1m]) > 0
+      for: 30s
+      labels:
+        severity: critical
 {{ end }}
