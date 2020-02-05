@@ -24,8 +24,8 @@ class Prometheus {
     this.totalBlocksProduced.inc({name, account})
   }
 
-  increaseTotalValidatorOfflineReports(name, session) {
-    this.totalValidatorOfflineReports.inc({name, session})
+  increaseTotalValidatorOfflineReports(name) {
+    this.totalValidatorOfflineReports.inc({name})
   }
 
   _initMetrics() {
@@ -37,7 +37,7 @@ class Prometheus {
     this.totalValidatorOfflineReports = new promClient.Counter({
       name: 'polkadot_offline_validator_reports_total',
       help: 'Total times a validator has been reported offline',
-      labelNames: ['name', 'session']
+      labelNames: ['name']
     })
   }
 }
