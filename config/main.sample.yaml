@@ -4,10 +4,12 @@ logLevel: info
 networkId: kusama-cc3
 matrixbot:
   endpoint: "http://matrixbot:8080/skill/eventmanager/webhook"
+validators:
+- name: test
+  address: Gt6HqWBhdu4Sy1u8ASTbS1qf2Ac5gwdegwr8tWN8saMxPt5
 subscribe:
   transactions:
   - name: faucet
     address: EaG2CRhJWPb7qmdcJvy3LiWdh26Jreu9Dx6R1rXxPmYXoDk
-  producers:
-  - name: test
-    address: Gt6HqWBhdu4Sy1u8ASTbS1qf2Ac5gwdegwr8tWN8saMxPt5
+  producers: true
+  offline: true

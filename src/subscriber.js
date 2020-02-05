@@ -7,6 +7,7 @@ class Subscriber {
     this.endpoint = cfg.endpoint
     this.networkId = cfg.networkId
     this.subscribe = cfg.subscribe
+    this.validators = cfg.validators
     this.prometheus = cfg.prometheus
     this.notifier = cfg.notifier
     this.logger = cfg.logger
@@ -17,7 +18,8 @@ class Subscriber {
 
     Object.keys(this.subscribe).forEach((subscription) => {
       this.isInitialized[subscription] = {}
-      this.subscribe[subscription].forEach((account) => {
+      const iter = (subscription !== 'transactions') ? this.validators : this.subscribe[subscription]
+      iter.forEach((account) => {
         this.isInitialized[subscription][account.name] = false
       })
     })
@@ -31,6 +33,9 @@ class Subscriber {
     }
     if (this.subscribe.producers) {
       await this._subscribeProducers()
+    }
+    if (this.subscribe.offline) {
+      await this._subscribeOffline()
     }
   }
 
@@ -77,7 +82,7 @@ class Subscriber {
   async _subscribeProducers() {
     this.unsubscribe.producers = []
 
-    this.subscribe.producers.forEach((account) => {
+    this.validators.forEach((account) => {
       // always increase metric even the first time, so that we initialize the time serie
       // https://github.com/prometheus/prometheus/issues/1673
       this.prometheus.increaseTotalBlocksProduced(account.name, account.address)
@@ -89,13 +94,45 @@ class Subscriber {
       const deriveHeader = await this.api.derive.chain.getHeader(hash)
       const author = deriveHeader.author
 
-      const account = this.subscribe.producers.find((producer) => producer.address == author)
+      const account = this.validators.find((producer) => producer.address == author)
       if (account) {
         this.logger.info(`New block produced by ${account.name}`)
         this.prometheus.increaseTotalBlocksProduced(account.name, account.address)
       }
     })
     this.unsubscribe.producers.push(unsub)
+  }
+
+  async _subscribeOffline() {
+    this.validators.forEach((account) => {
+      // always increase metric even the first time, so that we initialize the time serie
+      // https://github.com/prometheus/prometheus/issues/1673
+      this.prometheus.increaseTotalValidatorOfflineReports(account.name)
+    })
+
+    this.api.query.system.events((events) => {
+      events.forEach((record) => {
+        const { event } = record;
+
+        if(this._isOfflineEvent(event)) {
+          const items = event.data[0]
+
+          items.forEach((item) => {
+            const offlineValidator = item[0]
+            const account = this.validators.find((subject) => subject.address == offlineValidator)
+
+            if (account) {
+              this.logger.info(`${account.name} found offline`)
+              this.prometheus.increaseTotalValidatorOfflineReports(account.name, account.address)
+            }
+          })
+        }
+      })
+    })
+  }
+
+  _isOfflineEvent(event) {
+    return event.section == 'imOnline' && event.method == 'SomeOffline'
   }
 }
 
