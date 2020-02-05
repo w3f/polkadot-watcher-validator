@@ -18,7 +18,8 @@ class Subscriber {
 
     Object.keys(this.subscribe).forEach((subscription) => {
       this.isInitialized[subscription] = {}
-      this.validators.forEach((account) => {
+      const iter = (subscription !== 'transactions') ? this.validators : this.subscribe[subscription]
+      iter.forEach((account) => {
         this.isInitialized[subscription][account.name] = false
       })
     })

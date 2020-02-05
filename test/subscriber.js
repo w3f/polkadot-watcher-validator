@@ -6,19 +6,19 @@ describe('Subscriber', () => {
   describe('constructor', () => {
     it('creates an initialization object for all the cfg subscriber fields', () => {
       const cfg = {
+        validators: [{"name": "validator1"}],
         subscribe: {
-          field1: [{
-            name: "name1"
-          }],
-          field2: [{
-            name: "name2"
+          validatorSubscription: true,
+          transactions: [{
+            name: "txName"
           }]
         }
       }
 
       const subject = new Subscriber(cfg)
 
-      subject.isInitialized['field1']['name1'].should.eq(false)
+      subject.isInitialized['validatorSubscription']['validator1'].should.eq(false)
+      subject.isInitialized['transactions']['txName'].should.eq(false)
     })
   })
 })
