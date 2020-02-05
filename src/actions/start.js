@@ -41,6 +41,7 @@ module.exports = {
       endpoint: cfg.endpoint,
       networkId: cfg.networkId,
       subscribe: cfg.subscribe,
+      validators: cfg.validators,
       notifier,
       prometheus,
       logger
