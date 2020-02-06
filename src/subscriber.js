@@ -119,10 +119,11 @@ class Subscriber {
 
           items.forEach((item) => {
             const offlineValidator = item[0]
+            this.logger.info(`${offlineValidator} found offline`)
             const account = this.validators.find((subject) => subject.address == offlineValidator)
 
             if (account) {
-              this.logger.info(`${account.name} found offline`)
+              this.logger.info(`Target ${account.name} found offline`)
               this.prometheus.increaseTotalValidatorOfflineReports(account.name, account.address)
             }
           })
