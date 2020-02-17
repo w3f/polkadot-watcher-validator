@@ -21,4 +21,4 @@ prometheusRules:
   labels:
     app: w3f
 
-networkId: kusama-cc3
+networkId: kusama
