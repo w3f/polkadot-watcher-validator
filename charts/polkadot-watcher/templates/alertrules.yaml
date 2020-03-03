@@ -29,7 +29,7 @@ spec:
       annotations:
         message: '{{`{{ $labels.name }}`}} was reported offline, check https://polkascan.io/pre/{{ .Values.networkId }}/event?module=imonline&event=SomeOffline&page=1 for details'
         runbook_url: "https://github.com/w3f/infrastructure/wiki/Validator-Offline"
-      expr: increase(polkadot_offline_validator_reports_total[1m]) > 0
+      expr: increase(polkadot_offline_validator_reports_total[2m]) > 0
       for: 30s
       labels:
         severity: critical
