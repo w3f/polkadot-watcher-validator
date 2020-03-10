@@ -56,7 +56,8 @@ class Subscriber {
   async _subscribeTransactions() {
     this.unsubscribe.transactions = []
     await asyncForEach(this.subscribe.transactions, async (account) => {
-      const unsub = await this.api.query.system.accountNonce(account.address, async (nonce) => {
+      const unsub = await this.api.query.system.account(account.address, async (acc) => {
+        const nonce = acc.nonce;
         this.logger.info(`The nonce for ${account.name} is ${nonce}`)
         if (this.isInitialized['transactions'][account.name]) {
           this.logger.info(`New transaction from ${account.name}`)
