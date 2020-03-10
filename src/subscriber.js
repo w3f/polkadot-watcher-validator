@@ -100,7 +100,7 @@ class Subscriber {
         this.prometheus.increaseTotalBlocksProduced(account.name, account.address)
 
         // reset potential offline counters
-        this.prometheus.totalValidatorOfflineReports(account.name)
+        this.prometheus.resetTotalValidatorOfflineReports(account.name)
       }
     })
     this.unsubscribe.producers.push(unsub)
@@ -110,7 +110,7 @@ class Subscriber {
     this.validators.forEach((account) => {
       // always increase metric even the first time, so that we initialize the time serie
       // https://github.com/prometheus/prometheus/issues/1673
-      this.prometheus.totalValidatorOfflineReports(account.name)
+      this.prometheus.resetTotalValidatorOfflineReports(account.name)
     })
 
     this.api.query.system.events((events) => {
