@@ -9,6 +9,15 @@ jobs:
       - run: yarn
       - run: yarn test
 
+  helmLint:
+    docker:
+      - image: web3f/ci-commons:v2.0.1
+    steps:
+      - checkout
+      - run:
+          command: |
+            helm lint ./charts/polkadot-watcher
+
   buildImage:
     docker:
       - image: web3f/ci-commons:v2.0.1
@@ -57,6 +66,10 @@ workflows:
           filters:
             tags:
               only: /.*/
+      - helmLint:
+          filters:
+            tags:
+              only: /.*/
       - buildImage:
           filters:
             tags:
@@ -68,6 +81,7 @@ workflows:
             tags:
               only: /.*/
           requires:
+            - helmLint
             - unitTest
       - publishImage:
           filters:
