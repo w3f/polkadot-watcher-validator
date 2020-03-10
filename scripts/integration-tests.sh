@@ -11,7 +11,7 @@ run_tests() {
 }
 
 teardown() {
-    helm delete --purge polkadot-watcher
+    helm delete polkadot-watcher
 }
 
 main(){
