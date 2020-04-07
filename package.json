@@ -12,7 +12,7 @@
     "test": "mocha --reporter spec --recursive"
   },
   "dependencies": {
-    "@polkadot/api": "1.7.1",
+    "@polkadot/api": "1.9.1",
     "commander": "^4.0.0",
     "express": "^4.17.1",
     "fs-extra": "^8.1.0",
