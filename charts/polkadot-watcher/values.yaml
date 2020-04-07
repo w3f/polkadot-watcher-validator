@@ -15,6 +15,7 @@ config:
 
 serviceMonitor:
   labels:
+    group: w3f
     release: prometheus-operator
 
 prometheusRules:
