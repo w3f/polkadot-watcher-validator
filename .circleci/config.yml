@@ -3,7 +3,7 @@ oversion: 2
 jobs:
   unitTest:
     docker:
-      - image: circleci/node:10.15
+      - image: node:12.16.1-alpine3.11
     steps:
       - checkout
       - run: yarn
@@ -11,7 +11,7 @@ jobs:
 
   helmLint:
     docker:
-      - image: web3f/ci-commons:2.1.3
+      - image: web3f/ci-commons:v2.1.3
     steps:
       - checkout
       - run:
@@ -20,7 +20,7 @@ jobs:
 
   buildImage:
     docker:
-      - image: web3f/ci-commons:2.1.3
+      - image: web3f/ci-commons:v2.1.3
     steps:
       - checkout
       - setup_remote_docker
@@ -30,7 +30,7 @@ jobs:
 
   integrationTests:
     docker:
-      - image: web3f/ci-commons:2.1.3
+      - image: web3f/ci-commons:v2.1.3
     steps:
       - checkout
       - setup_remote_docker
@@ -41,7 +41,7 @@ jobs:
 
   publishImage:
     docker:
-      - image: web3f/ci-commons:2.1.3
+      - image: web3f/ci-commons:v2.1.3
     steps:
       - checkout
       - setup_remote_docker
@@ -51,7 +51,7 @@ jobs:
 
   publishChart:
     docker:
-      - image: web3f/ci-commons:2.1.3
+      - image: web3f/ci-commons:v2.1.3
     steps:
       - checkout
       - run:
