@@ -1,0 +1,8 @@
+node_modules/
+dist/
+charts/
+helmfile.d/
+.circleci/
+config/
+scripts/
+test/
