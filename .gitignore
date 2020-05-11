@@ -1,2 +1,7 @@
 node_modules
 config/main.yaml
+config/secrets.yaml
+dist/
+helmfile.d/.cache
+helmfile.d/.config
+helmfile.d/.kube
