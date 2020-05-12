@@ -23,3 +23,5 @@ prometheusRules:
     app: w3f
 
 networkId: kusama
+
+origin: cluster
