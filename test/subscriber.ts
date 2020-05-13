@@ -55,6 +55,39 @@ function delay(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+async function sendFromAliceToBob(): Promise<void> {
+    const alice = keyring.addFromUri('//Alice');
+    const bob = keyring.addFromUri('//Bob');
+
+    const pass = 'pass';
+    const aliceKeypairJson = keyring.toJson(alice.address, pass);
+    const ksFile = tmp.fileSync();
+    fs.writeSync(ksFile.fd, JSON.stringify(aliceKeypairJson));
+    const passFile = tmp.fileSync();
+    fs.writeSync(passFile.fd, pass);
+
+    const ks: Keystore = { filePath: ksFile.name, passwordPath: passFile.name };
+    const toSend = new BN(10000000000000);
+
+    const endpoint = testRPC.endpoint();
+    const client = new Client(endpoint, logger);
+
+    await client.send(ks, bob.address, toSend as Balance);
+}
+
+function checkTransaction(expected: string): void {
+    let found = false;
+
+    for (const data of nt.receivedData) {
+        const actual = data.name;
+        if (actual === expected) {
+            found = true;
+            break;
+        }
+    }
+    found.should.be.true;
+}
+
 describe('Subscriber', () => {
     before(async () => {
         await testRPC.start('0.7.33');
@@ -90,37 +123,18 @@ describe('Subscriber', () => {
 
         describe('transactions', async () => {
             it('should record sent transactions', async () => {
-                const alice = keyring.addFromUri('//Alice');
-                const bob = keyring.addFromUri('//Bob');
+                nt.resetReceivedData();
 
-                const pass = 'pass';
-                const aliceKeypairJson = keyring.toJson(alice.address, pass);
-                const ksFile = tmp.fileSync();
-                fs.writeSync(ksFile.fd, JSON.stringify(aliceKeypairJson));
-                const passFile = tmp.fileSync();
-                fs.writeSync(passFile.fd, pass);
+                await sendFromAliceToBob();
 
-                const ks: Keystore = { filePath: ksFile.name, passwordPath: passFile.name };
-                const toSend = new BN(10000000000000);
+                checkTransaction('Alice');
+            });
+            it('should record received transactions', async () => {
+                nt.resetReceivedData();
 
-                const endpoint = testRPC.endpoint();
-                const client = new Client(endpoint, logger);
+                await sendFromAliceToBob();
 
-                await client.send(ks, bob.address, toSend as Balance);
-
-                await delay(6000);
-
-                let found = false;
-                const expected = 'Alice';
-
-                for (const data of nt.receivedData) {
-                    const actual = data.name;
-                    if (actual === expected) {
-                        found = true;
-                        break;
-                    }
-                }
-                found.should.be.true;
+                checkTransaction('Bob');
             });
         });
     });

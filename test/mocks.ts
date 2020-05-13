@@ -36,4 +36,8 @@ export class NotifierMock {
     get receivedData(): Array<TransactionData> {
         return this._receiveData;
     }
+
+    resetReceivedData(): void {
+        this._receiveData = [];
+    }
 }
