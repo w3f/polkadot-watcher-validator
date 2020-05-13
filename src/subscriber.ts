@@ -12,12 +12,8 @@ import {
 } from './types';
 import { asyncForEach } from './async';
 
-interface InitializedItem {
-    [name: string]: boolean;
-}
-
 interface InitializedMap {
-    [name: string]: InitializedItem;
+    [name: string]: boolean;
 }
 
 export class Subscriber {
@@ -26,7 +22,7 @@ export class Subscriber {
     private networkId: string;
     private subscribe: SubscriberConfig;
     private validators: Array<Subscribable>;
-    private _isInitialized: InitializedMap;
+    private _initializedTransactions: InitializedMap;
 
     constructor(
         cfg: InputConfig,
@@ -39,15 +35,10 @@ export class Subscriber {
         this.subscribe = cfg.subscribe
         this.validators = cfg.validators
 
-        this._isInitialized = {};
-
-        Object.keys(this.subscribe).forEach((subscription) => {
-            this._isInitialized[subscription] = {}
-            const iter = (subscription !== 'transactions') ? this.validators : this.subscribe[subscription]
-            iter.forEach((account) => {
-                this._isInitialized[subscription][account.name] = false
-            })
-        });
+        this._initializedTransactions = {};
+        for (const subscription of this.subscribe.transactions) {
+            this._initializedTransactions[subscription.name] = false;
+        }
     }
 
     public async start(): Promise<void> {
@@ -65,7 +56,7 @@ export class Subscriber {
     }
 
     get isInitialized(): InitializedMap {
-        return this._isInitialized;
+        return this._initializedTransactions;
     }
 
     private async _initAPI(): Promise<void> {
@@ -87,7 +78,7 @@ export class Subscriber {
             await this.api.query.system.account(account.address, async (acc) => {
                 const nonce = acc.nonce;
                 this.logger.info(`The nonce for ${account.name} is ${nonce}`);
-                if (this._isInitialized['transactions'][account.name]) {
+                if (this._initializedTransactions[account.name]) {
                     this.logger.info(`New transaction from ${account.name}`);
                     // send data to notifier
                     const data = {
@@ -101,7 +92,7 @@ export class Subscriber {
                         this.logger.error(`could not notify transaction: ${e.message}`);
                     }
                 } else {
-                    this._isInitialized['transactions'][account.name] = true;
+                    this._initializedTransactions[account.name] = true;
                 }
             });
         });
@@ -119,14 +110,15 @@ export class Subscriber {
             const hash = await this.api.rpc.chain.getBlockHash(header.number.toNumber());
             const deriveHeader = await this.api.derive.chain.getHeader(hash);
             const author = deriveHeader.author;
+            if (author) {
+                const account = this.validators.find((producer) => producer.address == author.toString());
+                if (account) {
+                    this.logger.info(`New block produced by ${account.name}`);
+                    this.promClient.increaseTotalBlocksProduced(account.name, account.address);
 
-            const account = this.validators.find((producer) => producer.address == author.toString());
-            if (account) {
-                this.logger.info(`New block produced by ${account.name}`);
-                this.promClient.increaseTotalBlocksProduced(account.name, account.address);
-
-                // reset potential offline counters
-                this.promClient.resetTotalValidatorOfflineReports(account.name);
+                    // reset potential offline counters
+                    this.promClient.resetTotalValidatorOfflineReports(account.name);
+                }
             }
         });
     }
@@ -136,7 +128,7 @@ export class Subscriber {
             // always increase metric even the first time, so that we initialize the time serie
             // https://github.com/prometheus/prometheus/issues/1673
             this.promClient.resetTotalValidatorOfflineReports(account.name);
-        })
+        });
 
         this.api.query.system.events((events) => {
             events.forEach((record) => {
@@ -157,7 +149,7 @@ export class Subscriber {
                     });
                 }
             });
-        })
+        });
     }
 
     private _isOfflineEvent(event: Event): boolean {
