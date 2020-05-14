@@ -1,6 +1,11 @@
 import got from 'got';
 
-import { TransactionData, Notifier, MatrixbotMsg } from './types';
+import {
+    TransactionData,
+    Notifier,
+    MatrixbotMsg,
+    TransactionType
+} from './types';
 
 export const MsgTemplate = {
     "receiver": "webhook",
@@ -33,8 +38,14 @@ export class Matrixbot implements Notifier {
     private transactionMsg(data: TransactionData): MatrixbotMsg {
         const msg = { ...MsgTemplate };
 
-        msg.alerts[0].annotations.description = `New transaction sent from account ${data.name}, check https://polkascan.io/pre/${data.networkId}/account/${data.address}#transactions for details`;
+        let description: string;
+        if (data.txType === TransactionType.Sent) {
+            description = `New transaction sent from account ${data.name}, check https://polkascan.io/pre/${data.networkId}/account/${data.address}#transactions for details`;
+        } else {
+            description = `New transaction received in account ${data.name}, check https://polkascan.io/pre/${data.networkId}/account/${data.address}#transactions for details`;
+        }
 
+        msg.alerts[0].annotations.description = description;
         return msg;
     }
 
