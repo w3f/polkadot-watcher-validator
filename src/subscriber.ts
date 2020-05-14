@@ -8,7 +8,8 @@ import {
     SubscriberConfig,
     Subscribable,
     PromClient,
-    Notifier
+    Notifier,
+    TransactionType
 } from './types';
 import { asyncForEach } from './async';
 
@@ -84,7 +85,8 @@ export class Subscriber {
                     const data = {
                         name: account.name,
                         address: account.address,
-                        networkId: this.networkId
+                        networkId: this.networkId,
+                        txType: TransactionType.Sent
                     };
                     try {
                         await this.notifier.newTransaction(data);

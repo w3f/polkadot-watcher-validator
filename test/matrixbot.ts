@@ -1,7 +1,8 @@
 import nock from 'nock';
 import { should } from 'chai';
 
-import { Matrixbot } from '../src/matrixbot';
+import { Matrixbot, MsgTemplate } from '../src/matrixbot';
+import { TransactionType } from '../src/types';
 
 should();
 
@@ -13,23 +14,8 @@ const senderName = 'senderName';
 const senderAddress = 'senderAddress';
 const networkId = 'networkId';
 
-const expectedSentMessage = {
-    "receiver": "webhook",
-    "status": "firing",
-    "alerts": [
-        {
-            "status": "firing",
-            "labels": {
-                "alertname": "TransactionSent",
-                "severity": "info"
-            },
-            "annotations": {
-                "description": `New transaction sent from account ${senderName}, check https://polkascan.io/pre/${networkId}/account/${senderAddress}#transactions for details`
-            }
-        }
-    ],
-    "version": "4"
-};
+const expectedSentMessage = { ...MsgTemplate };
+expectedSentMessage.alerts[0].annotations.description = `New transaction sent from account ${senderName}, check https://polkascan.io/pre/${networkId}/account/${senderAddress}#transactions for details`;
 
 describe('Matrixbot', () => {
     describe('newTransaction', () => {
@@ -44,6 +30,7 @@ describe('Matrixbot', () => {
 
             const data = {
                 name: senderName,
+                txType: TransactionType.Sent,
                 address: senderAddress,
                 networkId: networkId
             };
