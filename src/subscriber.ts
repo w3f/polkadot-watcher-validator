@@ -1,5 +1,6 @@
 import { ApiPromise, WsProvider } from '@polkadot/api';
 import { Event } from '@polkadot/types/interfaces/system';
+import { Balance } from '@polkadot/types/interfaces';
 import { Tuple } from '@polkadot/types/codec';
 import { Logger } from '@w3f/logger';
 
@@ -9,12 +10,18 @@ import {
     Subscribable,
     PromClient,
     Notifier,
-    TransactionType
+    TransactionType,
+    TransactionData
 } from './types';
+import { ZeroBalance } from './constants';
 import { asyncForEach } from './async';
 
 interface InitializedMap {
     [name: string]: boolean;
+}
+
+interface FreeBalance {
+    [name: string]: Balance;
 }
 
 export class Subscriber {
@@ -75,19 +82,36 @@ export class Subscriber {
     }
 
     private async _subscribeTransactions(): Promise<void> {
+        const freeBalance: FreeBalance = {};
         await asyncForEach(this.subscribe.transactions, async (account) => {
+            const { data: { free: previousFree } } = await this.api.query.system.account(account.address);
+            freeBalance[account.address] = previousFree;
             await this.api.query.system.account(account.address, async (acc) => {
                 const nonce = acc.nonce;
                 this.logger.info(`The nonce for ${account.name} is ${nonce}`);
+                const currentFree = acc.data.free;
+
                 if (this._initializedTransactions[account.name]) {
-                    this.logger.info(`New transaction from ${account.name}`);
-                    // send data to notifier
-                    const data = {
+                    const data: TransactionData = {
                         name: account.name,
                         address: account.address,
-                        networkId: this.networkId,
-                        txType: TransactionType.Sent
+                        networkId: this.networkId
                     };
+
+                    // check if the action was performed by the account or externally
+                    const change = currentFree.sub(freeBalance[account.address]);
+                    if (!change.gt(ZeroBalance)) {
+                        this.logger.info(`Action performed from account ${account.name}`);
+
+                        data.txType = TransactionType.Sent;
+                    } else {
+                        this.logger.info(`Transfer received in account ${account.name}`);
+
+                        data.txType = TransactionType.Received;
+                    }
+
+                    freeBalance[account.address] = currentFree;
+
                     try {
                         await this.notifier.newTransaction(data);
                     } catch (e) {
