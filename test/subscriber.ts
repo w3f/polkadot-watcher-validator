@@ -11,6 +11,7 @@ import {
     NotifierMock,
     PrometheusMock
 } from './mocks';
+import { TransactionType } from '../src/types';
 
 should();
 
@@ -75,12 +76,12 @@ async function sendFromAliceToBob(): Promise<void> {
     await client.send(ks, bob.address, toSend as Balance);
 }
 
-function checkTransaction(expected: string): void {
+function checkTransaction(expectedName: string, expectedTxType: TransactionType): void {
     let found = false;
 
     for (const data of nt.receivedData) {
-        const actual = data.name;
-        if (actual === expected) {
+        if (data.name === expectedName &&
+            data.txType === expectedTxType) {
             found = true;
             break;
         }
@@ -122,19 +123,13 @@ describe('Subscriber', () => {
         });
 
         describe('transactions', async () => {
-            it('should record sent transactions', async () => {
+            it('should record sent and received transactions', async () => {
                 nt.resetReceivedData();
 
                 await sendFromAliceToBob();
 
-                checkTransaction('Alice');
-            });
-            it('should record received transactions', async () => {
-                nt.resetReceivedData();
-
-                await sendFromAliceToBob();
-
-                checkTransaction('Bob');
+                checkTransaction('Alice', TransactionType.Sent);
+                checkTransaction('Bob', TransactionType.Received);
             });
         });
     });

@@ -27,18 +27,18 @@ export class PrometheusMock {
 }
 
 export class NotifierMock {
-    private _receiveData: Array<TransactionData> = [];
+    private _receivedData: Array<TransactionData> = [];
 
     async newTransaction(data: TransactionData): Promise<string> {
-        this._receiveData.push(data);
+        this._receivedData.push(data);
         return "";
     }
 
     get receivedData(): Array<TransactionData> {
-        return this._receiveData;
+        return this._receivedData;
     }
 
     resetReceivedData(): void {
-        this._receiveData = [];
+        this._receivedData = [];
     }
 }
