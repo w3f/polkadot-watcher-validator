@@ -87,7 +87,7 @@ export class Subscriber {
                         networkId: this.networkId
                     };
                     try {
-                        this.notifier.newTransaction(data);
+                        await this.notifier.newTransaction(data);
                     } catch (e) {
                         this.logger.error(`could not notify transaction: ${e.message}`);
                     }
