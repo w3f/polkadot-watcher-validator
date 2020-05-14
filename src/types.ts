@@ -34,5 +34,5 @@ export interface TransactionData extends Subscribable {
 }
 
 export interface Notifier {
-    newTransaction(data: TransactionData): void;
+    newTransaction(data: TransactionData): Promise<string>;
 }
