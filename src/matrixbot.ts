@@ -27,13 +27,13 @@ interface MatrixbotMsg {
 export class Matrixbot implements Notifier {
     constructor(private readonly endpoint: string) { }
 
-    newTransaction(data: TransactionData): void {
-        const json = this._transactionMsg(data);
+    async newTransaction(data: TransactionData): Promise<string> {
+        const json = this.transactionMsg(data);
 
-        return this._send(json);
+        return this.send(json);
     }
 
-    _transactionMsg(data: TransactionData): MatrixbotMsg {
+    private transactionMsg(data: TransactionData): MatrixbotMsg {
         return {
             "receiver": "webhook",
             "status": "firing",
@@ -53,7 +53,8 @@ export class Matrixbot implements Notifier {
         };
     }
 
-    _send(json: MatrixbotMsg): void {
-        got.post(this.endpoint, { json });
+    private async send(json: MatrixbotMsg): Promise<string> {
+        const result = await got.post(this.endpoint, { json });
+        return result.body;
     }
 }
