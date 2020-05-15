@@ -18,8 +18,10 @@ const receiverAddress = 'receiverAddress';
 const networkId = 'networkId';
 
 const expectedSentMessage = `New transaction sent from account ${senderName}, check https://polkascan.io/pre/${networkId}/account/${senderAddress}#transactions for details`;
+const expectedSentAlertname = 'TransactionSent';
 
 const expectedReceivedMessage = `New transaction received in account ${receiverName}, check https://polkascan.io/pre/${networkId}/account/${receiverAddress}#transactions for details`;
+const expectedReceivedAlertname = 'TransactionReceived';
 
 describe('Matrixbot', () => {
     describe('newTransaction', () => {
@@ -30,7 +32,17 @@ describe('Matrixbot', () => {
         it('notifies transactions sent', async () => {
             nock(host)
                 .post(`/${path}`,
-                    _.matches({ alerts: [{ annotations: { description: expectedSentMessage } }] }))
+                    _.matches({
+                        alerts: [
+                            {
+                                labels: {
+                                    alertname: expectedSentAlertname
+                                },
+                                annotations: { description: expectedSentMessage }
+                            }
+                        ]
+                    })
+                )
                 .reply(200);
 
             const data = {
@@ -46,7 +58,17 @@ describe('Matrixbot', () => {
         it('notifies transactions received', async () => {
             nock(host)
                 .post(`/${path}`,
-                    _.matches({ alerts: [{ annotations: { description: expectedReceivedMessage } }] }))
+                    _.matches({
+                        alerts: [
+                            {
+                                labels: {
+                                    alertname: expectedReceivedAlertname
+                                },
+                                annotations: { description: expectedReceivedMessage }
+                            }
+                        ]
+                    })
+                )
                 .reply(200);
 
             const data = {
