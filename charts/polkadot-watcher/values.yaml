@@ -1,6 +1,6 @@
 environment: production
 port: 3000
-namespace: default
+
 image:
   repo: web3f/polkadot-watcher
   tag: latest
