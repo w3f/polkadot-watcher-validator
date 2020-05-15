@@ -14,7 +14,7 @@ export const MsgTemplate = {
         {
             "status": "firing",
             "labels": {
-                "alertname": "TransactionSent",
+                "alertname": "",
                 "severity": "info"
             },
             "annotations": {
@@ -39,12 +39,15 @@ export class Matrixbot implements Notifier {
         const msg = { ...MsgTemplate };
 
         let description: string;
+        let alertname: string;
         if (data.txType === TransactionType.Sent) {
             description = `New transaction sent from account ${data.name}, check https://polkascan.io/pre/${data.networkId}/account/${data.address}#transactions for details`;
+            alertname = 'TransactionSent';
         } else {
             description = `New transaction received in account ${data.name}, check https://polkascan.io/pre/${data.networkId}/account/${data.address}#transactions for details`;
+            alertname = 'TransactionReceived';
         }
-
+        msg.alerts[0].labels.alertname = alertname;
         msg.alerts[0].annotations.description = description;
         return msg;
     }
