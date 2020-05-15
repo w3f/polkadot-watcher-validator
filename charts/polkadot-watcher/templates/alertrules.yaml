@@ -17,6 +17,7 @@ spec:
       for: 319m
       labels:
         severity: warning
+        origin: {{ .Values.origin }}
     - alert: ProducerStallLong
       annotations:
         message: 'Blocks were not produced for 6:11 hours by {{`{{ $labels.name }}`}}'
@@ -25,6 +26,7 @@ spec:
       for: 371m
       labels:
         severity: critical
+        origin: {{ .Values.origin }}
     - alert: ValidatorOffline
       annotations:
         message: '{{`{{ $labels.name }}`}} was reported offline, check https://polkascan.io/pre/{{ .Values.networkId }}/event?module=imonline&event=SomeOffline&page=1 for details'
@@ -33,6 +35,7 @@ spec:
       for: 30s
       labels:
         severity: critical
+        origin: {{ .Values.origin }}
     - alert: WatcherLogErrors
       annotations:
         message: 'Polkadot Watcher is showing errors in the log, please check'
@@ -40,4 +43,5 @@ spec:
       for: 30s
       labels:
         severity: warning
+        origin: {{ .Values.origin }}
 {{ end }}

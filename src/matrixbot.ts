@@ -1,59 +1,56 @@
 import got from 'got';
 
-import { TransactionData, Notifier } from './types';
+import {
+    TransactionData,
+    Notifier,
+    MatrixbotMsg,
+    TransactionType
+} from './types';
 
-interface LabelMap {
-    alertname: string;
-    severity: string;
-}
+export const MsgTemplate = {
+    "receiver": "webhook",
+    "status": "firing",
+    "alerts": [
+        {
+            "status": "firing",
+            "labels": {
+                "alertname": "TransactionSent",
+                "severity": "info"
+            },
+            "annotations": {
+                "description": ""
+            }
+        }
+    ],
+    "version": "4"
+};
 
-interface Annotation {
-    description: string;
-}
-
-interface Alert {
-    status: string;
-    labels: LabelMap;
-    annotations: Annotation;
-}
-
-interface MatrixbotMsg {
-    receiver: string;
-    status: string;
-    alerts: Array<Alert>;
-    version: string;
-}
 
 export class Matrixbot implements Notifier {
     constructor(private readonly endpoint: string) { }
 
-    newTransaction(data: TransactionData): void {
-        const json = this._transactionMsg(data);
+    async newTransaction(data: TransactionData): Promise<string> {
+        const json = this.transactionMsg(data);
 
-        return this._send(json);
+        return this.send(json);
     }
 
-    _transactionMsg(data: TransactionData): MatrixbotMsg {
-        return {
-            "receiver": "webhook",
-            "status": "firing",
-            "alerts": [
-                {
-                    "status": "firing",
-                    "labels": {
-                        "alertname": "TransactionSent",
-                        "severity": "info"
-                    },
-                    "annotations": {
-                        "description": `New transaction sent from account ${data.name}, check https://polkascan.io/pre/${data.networkId}/account/${data.address}#transactions for details`
-                    }
-                }
-            ],
-            "version": "4"
-        };
+    private transactionMsg(data: TransactionData): MatrixbotMsg {
+        const msg = { ...MsgTemplate };
+
+        let description: string;
+        if (data.txType === TransactionType.Sent) {
+            description = `New transaction sent from account ${data.name}, check https://polkascan.io/pre/${data.networkId}/account/${data.address}#transactions for details`;
+        } else {
+            description = `New transaction received in account ${data.name}, check https://polkascan.io/pre/${data.networkId}/account/${data.address}#transactions for details`;
+        }
+
+        msg.alerts[0].annotations.description = description;
+        return msg;
     }
 
-    _send(json: MatrixbotMsg): void {
-        got.post(this.endpoint, { json });
+    private async send(json: MatrixbotMsg): Promise<string> {
+        const result = await got.post(this.endpoint, { json });
+        return result.body;
     }
 }
