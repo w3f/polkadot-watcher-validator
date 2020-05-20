@@ -14,7 +14,7 @@ spec:
         message: 'Blocks were not produced for 5:19 hours by {{`{{ $labels.name }}`}}'
         runbook_url: "https://github.com/w3f/infrastructure/wiki/Producer-Stall"
       expr: increase(polkadot_blocks_produced_total[10m]) == 0
-      for: 319m
+      for: 355m
       labels:
         severity: warning
         origin: {{ .Values.origin }}
@@ -23,7 +23,7 @@ spec:
         message: 'Blocks were not produced for 6:11 hours by {{`{{ $labels.name }}`}}'
         runbook_url: "https://github.com/w3f/infrastructure/wiki/Producer-Stall"
       expr: increase(polkadot_blocks_produced_total[10m]) == 0
-      for: 371m
+      for: 412m
       labels:
         severity: critical
         origin: {{ .Values.origin }}
