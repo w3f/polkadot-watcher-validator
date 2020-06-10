@@ -3,10 +3,10 @@ version: 2
 jobs:
   unitTest:
     docker:
-      - image: node:12.16.1-alpine3.11
-      - image: parity/polkadot:v0.7.33
+      - image: web3f/node-dind:v0.3.0
+      - image: parity/polkadot:v0.8.7
         name: polkadot
-        command: --dev --ws-port 11000 --unsafe-ws-external
+        command: --chain=kusama-dev --ws-port 11000 --alice --ws-external --rpc-methods=Unsafe --rpc-cors=all
     steps:
       - checkout
       - run: yarn
