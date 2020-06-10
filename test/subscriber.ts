@@ -1,13 +1,13 @@
 import BN from 'bn.js';
-import tmp from 'tmp';
-import fs from 'fs-extra';
+import * as tmp from 'tmp';
+import * as fs from 'fs-extra';
 import { Client, Keyring, Keystore, Balance } from '@w3f/polkadot-api-client';
 import { TestPolkadotRPC } from '@w3f/test-utils';
+import { createLogger } from '@w3f/logger';
 import { should } from 'chai';
 
 import { Subscriber } from '../src/subscriber';
 import {
-    LoggerMock,
     NotifierMock,
     PrometheusMock
 } from './mocks';
@@ -44,7 +44,7 @@ const cfg = {
     }
 };
 
-const logger = new LoggerMock();
+const logger = createLogger();
 const pc = new PrometheusMock();
 const nt = new NotifierMock();
 
