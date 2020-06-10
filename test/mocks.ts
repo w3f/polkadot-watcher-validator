@@ -4,14 +4,6 @@
 import { TransactionData } from '../src/types';
 
 
-export class LoggerMock {
-    info(msg: string): void {
-        console.log(msg);
-    }
-    error(msg: string): void { }
-    debug(msg: string): void { }
-}
-
 export class PrometheusMock {
     private _totalBlocksProduced = 0;
 
