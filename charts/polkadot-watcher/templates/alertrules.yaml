@@ -11,7 +11,7 @@ spec:
     rules:
     - alert: ProducerStallShort
       annotations:
-        message: 'Blocks were not produced for 5:19 hours by {{`{{ $labels.name }}`}}'
+        message: 'Blocks were not produced for 9:45 hours by {{`{{ $labels.name }}`}}'
         runbook_url: "https://github.com/w3f/infrastructure/wiki/Producer-Stall"
       expr: increase(polkadot_blocks_produced_total[10m]) == 0
       for: 567m
@@ -20,7 +20,7 @@ spec:
         origin: {{ .Values.origin }}
     - alert: ProducerStallLong
       annotations:
-        message: 'Blocks were not produced for 6:11 hours by {{`{{ $labels.name }}`}}'
+        message: 'Blocks were not produced for 10:59 hours by {{`{{ $labels.name }}`}}'
         runbook_url: "https://github.com/w3f/infrastructure/wiki/Producer-Stall"
       expr: increase(polkadot_blocks_produced_total[10m]) == 0
       for: 659m
