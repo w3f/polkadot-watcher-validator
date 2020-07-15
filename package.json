@@ -20,8 +20,8 @@
     "start": "node ./dist/index.js start"
   },
   "dependencies": {
-    "@polkadot/api": "1.18.1",
-    "@polkadot/types": "1.18.1",
+    "@polkadot/api": "1.24.1",
+    "@polkadot/types": "1.24.1",
     "@w3f/config": "^0.1.1",
     "@w3f/logger": "^0.4.0",
     "commander": "^4.0.0",
@@ -40,8 +40,8 @@
     "@types/tmp": "^0.2.0",
     "@typescript-eslint/eslint-plugin": "^2.25.0",
     "@typescript-eslint/parser": "^2.25.0",
-    "@w3f/polkadot-api-client": "^0.5.2",
-    "@w3f/test-utils": "^0.8.4",
+    "@w3f/polkadot-api-client": "^0.6.2",
+    "@w3f/test-utils": "^0.8.5",
     "chai": "^4.2.0",
     "eslint": "^6.6.0",
     "fs-extra": "^9.0.0",
