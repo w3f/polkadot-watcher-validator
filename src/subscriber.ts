@@ -44,8 +44,10 @@ export class Subscriber {
         this.validators = cfg.validators
 
         this._initializedTransactions = {};
-        for (const subscription of this.subscribe.transactions) {
-            this._initializedTransactions[subscription.name] = false;
+        if(this.subscribe.transactions){
+            for (const subscription of this.subscribe.transactions) {
+                this._initializedTransactions[subscription.name] = false;
+            }
         }
     }
 
@@ -190,9 +192,9 @@ export class Subscriber {
         });
 
         this.api.rpc.chain.subscribeNewHeads(async (lastHeader) => {
-            let isHeadAfterMidSession = await this._isHeadAfterMidSession(lastHeader)
+            let isHeartbeatExpected = await this._isHeadAfterHeartbeatBlockThreshold(lastHeader)
             await asyncForEach(this.validators, async (account) => {
-                if( isHeadAfterMidSession && ! await this._hasValidatorAuthoredBlocks(account) && ! await this._hasValidatorSentHeartbeat(account) ){
+                if( isHeartbeatExpected && ! await this._hasValidatorAuthoredBlocks(account) && ! await this._hasValidatorSentHeartbeat(account) ){
                     this.logger.info(`Target ${account.name} has either not authored any block or sent any heartbeat yet`);
                     this.promClient.setStateValidatorOfflineSessionReports(account.name)
                 }
@@ -211,7 +213,7 @@ export class Subscriber {
         return this.api.query.imOnline.heartbeatAfter()
     }
 
-    private async _isHeadAfterMidSession(header: Header) : Promise<boolean> {
+    private async _isHeadAfterHeartbeatBlockThreshold(header: Header) : Promise<boolean> {
         let currentBlock = header.number.toBn()
         let blockThreshold = await this._getHeartbeatBlockThreshold()
         return currentBlock.cmp(blockThreshold) > 0
@@ -234,7 +236,6 @@ export class Subscriber {
         let validatorIndex = validators.indexOf(validator.address)
         
         let hb = await this.api.query.imOnline.receivedHeartbeats(sessionIndex,validatorIndex) 
-
         return hb.toHuman() ? true : false
     }
 
