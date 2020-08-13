@@ -1,6 +1,6 @@
 import { ApiPromise, WsProvider } from '@polkadot/api';
 import { Event } from '@polkadot/types/interfaces/system';
-import { Balance } from '@polkadot/types/interfaces';
+import { Balance, BlockNumber, Header } from '@polkadot/types/interfaces';
 import { Tuple } from '@polkadot/types/codec';
 import { Logger } from '@w3f/logger';
 
@@ -13,7 +13,7 @@ import {
     TransactionType,
     TransactionData
 } from './types';
-import { ZeroBalance } from './constants';
+import { ZeroBalance, ZeroBN } from './constants';
 import { asyncForEach } from './async';
 
 interface InitializedMap {
@@ -60,6 +60,9 @@ export class Subscriber {
         }
         if (this.subscribe.offline) {
             await this._subscribeOffline();
+        }
+        if (this.subscribe.offline) {
+            await this._subscribePreventiveSessionOffline();
         }
     }
 
@@ -178,7 +181,66 @@ export class Subscriber {
         });
     }
 
+    private async _subscribePreventiveSessionOffline(): Promise<void> {
+
+        this.validators.forEach((account) => {
+            // always increase metric even the first time, so that we initialize the time serie
+            // https://github.com/prometheus/prometheus/issues/1673
+            this.promClient.resetStateValidatorOfflineSessionReports(account.name);
+        });
+
+        this.api.rpc.chain.subscribeNewHeads(async (lastHeader) => {
+            let isHeadAfterMidSession = await this._isHeadAfterMidSession(lastHeader)
+            await asyncForEach(this.validators, async (account) => {
+                if( isHeadAfterMidSession && ! await this._hasValidatorAuthoredBlocks(account) && ! await this._hasValidatorSentHeartbeat(account) ){
+                    this.logger.info(`Target ${account.name} has either not authored any block or sent any heartbeat yet`);
+                    this.promClient.setStateValidatorOfflineSessionReports(account.name)
+                }
+                else{
+                    this.promClient.resetStateValidatorOfflineSessionReports(account.name)
+                }
+            })
+        });
+    }
+
     private _isOfflineEvent(event: Event): boolean {
         return event.section == 'imOnline' && event.method == 'SomeOffline';
     }
+
+    private async _getHeartbeatBlockThreshold(): Promise<BlockNumber> {
+        return this.api.query.imOnline.heartbeatAfter()
+    }
+
+    private async _isHeadAfterMidSession(header: Header) : Promise<boolean> {
+        let currentBlock = header.number.toBn()
+        let blockThreshold = await this._getHeartbeatBlockThreshold()
+        return currentBlock.cmp(blockThreshold) > 0
+    }
+
+    private async _hasValidatorAuthoredBlocks(validator: Subscribable) : Promise<boolean> {
+        const sessionIndex = await this.api.query.session.currentIndex()
+        const numBlocksAuthored = await this.api.query.imOnline.authoredBlocks(sessionIndex,validator.address)
+        return numBlocksAuthored.cmp(ZeroBN) > 0
+    }
+
+    private async _hasValidatorSentHeartbeat(validator: Subscribable) : Promise<boolean> {
+        //TODO this function needs a refactoring
+        const sessionIndex = await this.api.query.session.currentIndex()
+        
+        const validators = await this.api.query.session.validators() 
+        if ( ! validators.includes(validator.address) ) {
+            return false
+        }
+        let validatorIndex = validators.indexOf(validator.address)
+        
+        let hb = await this.api.query.imOnline.receivedHeartbeats(sessionIndex,validatorIndex) 
+
+        return hb.toHuman() ? true : false
+    }
+
+   
+
+
+
+
 }
