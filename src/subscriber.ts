@@ -192,7 +192,7 @@ export class Subscriber {
         });
 
         this.api.rpc.chain.subscribeNewHeads(async (lastHeader) => {
-            let isHeartbeatExpected = await this._isHeadAfterHeartbeatBlockThreshold(lastHeader)
+            const isHeartbeatExpected = await this._isHeadAfterHeartbeatBlockThreshold(lastHeader)
             await asyncForEach(this.validators, async (account) => {
                 if( isHeartbeatExpected && ! await this._hasValidatorAuthoredBlocks(account) && ! await this._hasValidatorSentHeartbeat(account) ){
                     this.logger.info(`Target ${account.name} has either not authored any block or sent any heartbeat yet`);
@@ -213,20 +213,20 @@ export class Subscriber {
         return this.api.query.imOnline.heartbeatAfter()
     }
 
-    private async _isHeadAfterHeartbeatBlockThreshold(header: Header) : Promise<boolean> {
-        let currentBlock = header.number.toBn()
-        let blockThreshold = await this._getHeartbeatBlockThreshold()
+    private async _isHeadAfterHeartbeatBlockThreshold(header: Header): Promise<boolean> {
+        const currentBlock = header.number.toBn()
+        const blockThreshold = await this._getHeartbeatBlockThreshold()
         this.logger.debug(`Current Block: ${currentBlock}\tHeartbeatBlock Threshold: ${blockThreshold}`);
         return currentBlock.cmp(blockThreshold) > 0
     }
 
-    private async _hasValidatorAuthoredBlocks(validator: Subscribable) : Promise<boolean> {
+    private async _hasValidatorAuthoredBlocks(validator: Subscribable): Promise<boolean> {
         const sessionIndex = await this.api.query.session.currentIndex()
         const numBlocksAuthored = await this.api.query.imOnline.authoredBlocks(sessionIndex,validator.address)
         return numBlocksAuthored.cmp(ZeroBN) > 0
     }
 
-    private async _hasValidatorSentHeartbeat(validator: Subscribable) : Promise<boolean> {
+    private async _hasValidatorSentHeartbeat(validator: Subscribable): Promise<boolean> {
         //TODO this function needs a refactoring
         const sessionIndex = await this.api.query.session.currentIndex()
         
@@ -234,9 +234,9 @@ export class Subscriber {
         if ( ! validators.includes(validator.address) ) {
             return false
         }
-        let validatorIndex = validators.indexOf(validator.address)
+        const validatorIndex = validators.indexOf(validator.address)
         
-        let hb = await this.api.query.imOnline.receivedHeartbeats(sessionIndex,validatorIndex) 
+        const hb = await this.api.query.imOnline.receivedHeartbeats(sessionIndex,validatorIndex) 
         return hb.toHuman() ? true : false
     }
 
