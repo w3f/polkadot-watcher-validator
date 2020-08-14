@@ -1,0 +1,39 @@
+rule_files:
+    - /dev/stdin
+
+evaluation_interval: 1m
+
+tests:
+    - interval: 1m
+      input_series:
+          - series: 'polkadot_offline_validator_session_reports_state{name="node0"}'
+            values: '0 1+0x11 0 0' # 0 1 1 1 1 1 1 1 1 1 1 1 1 0 0 
+
+      alert_rule_test:
+          # Test ValidatorOfflineSessionLow alert
+          - eval_time: 3m # Values: 0 1 1 
+            alertname: ValidatorOfflineSessionLow
+            exp_alerts:
+          - eval_time: 4m # Values: 0 1 1 1
+            alertname: ValidatorOfflineSessionLow
+            exp_alerts:
+                - exp_labels:
+                    severity: warning
+                    origin: cluster
+                    name: node0
+                  exp_annotations:
+                      message: "Target node0 has either not authored any block or sent any heartbeat yet in this session"
+
+          # Test ValidatorOfflineSessionLong alert
+          - eval_time: 11m # Values: 0 1 1 1 1 1 1 1 1 1 1
+            alertname: ValidatorOfflineSessionLong
+            exp_alerts:
+                - exp_labels:
+                    severity: critical
+                    origin: cluster
+                    name: node0
+                  exp_annotations:
+                      message: "Target node0 has either not authored any block or sent any heartbeat yet in this session"                    
+          - eval_time: 15m # Values: 0 1 1 1 1 1 1 1 1 1 1 1 1 0 0
+            alertname: ValidatorOfflineSessionLong
+            exp_alerts:                  

@@ -216,6 +216,7 @@ export class Subscriber {
     private async _isHeadAfterHeartbeatBlockThreshold(header: Header) : Promise<boolean> {
         let currentBlock = header.number.toBn()
         let blockThreshold = await this._getHeartbeatBlockThreshold()
+        this.logger.debug(`Current Block: ${currentBlock}\tHeartbeatBlock Threshold: ${blockThreshold}`);
         return currentBlock.cmp(blockThreshold) > 0
     }
 

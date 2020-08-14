@@ -38,7 +38,7 @@ export class Prometheus implements PromClient {
     }
 
     resetTotalValidatorOfflineReports(name: string): void {
-        this.totalValidatorOfflineReports.set({ name }, 1); //FIXME why it is not 0 ?
+        this.totalValidatorOfflineReports.set({ name }, 1);
     }
 
     setStateValidatorOfflineSessionReports(name: string): void {
