@@ -13,6 +13,9 @@ export class PrometheusMock {
     increaseTotalValidatorOfflineReports(name: string, address: string): void { }
     resetTotalValidatorOfflineReports(name: string): void { }
 
+    setStateValidatorOfflineSessionReports(name: string): void {}
+    resetStateValidatorOfflineSessionReports(name: string): void {}
+
     get totalBlocksProduced(): number {
         return this._totalBlocksProduced;
     }
