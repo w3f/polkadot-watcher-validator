@@ -44,4 +44,12 @@ spec:
       labels:
         severity: warning
         origin: {{ .Values.origin }}
+    - alert: ValidatorOfflineSession
+      annotations:
+        message: 'Target {{`{{ $labels.name }}`}} has either not authored any block or sent any heartbeat yet in this session'
+      expr: polkadot_offline_validator_session_reports_state > 0
+      for: 3m
+      labels:
+        severity: critical
+        origin: {{ .Values.origin }}        
 {{ end }}

@@ -9,6 +9,7 @@ import { PromClient } from './types';
 export class Prometheus implements PromClient {
     private totalBlocksProduced: promClient.Counter;
     private totalValidatorOfflineReports: promClient.Gauge;
+    private stateValidatorOfflineSessionReports: promClient.Gauge;
 
     constructor(private readonly logger: Logger) {
         this._initMetrics()
@@ -40,6 +41,14 @@ export class Prometheus implements PromClient {
         this.totalValidatorOfflineReports.set({ name }, 1);
     }
 
+    setStateValidatorOfflineSessionReports(name: string): void {
+        this.stateValidatorOfflineSessionReports.set({ name }, 1);
+    }
+
+    resetStateValidatorOfflineSessionReports(name: string): void {
+        this.stateValidatorOfflineSessionReports.set({ name }, 0);
+    }
+
     _initMetrics(): void {
         this.totalBlocksProduced = new promClient.Counter({
             name: 'polkadot_blocks_produced_total',
@@ -49,6 +58,11 @@ export class Prometheus implements PromClient {
         this.totalValidatorOfflineReports = new promClient.Gauge({
             name: 'polkadot_offline_validator_reports_total',
             help: 'Total times a validator has been reported offline',
+            labelNames: ['name']
+        });
+        this.stateValidatorOfflineSessionReports = new promClient.Gauge({
+            name: 'polkadot_offline_validator_session_reports_state',
+            help: 'Whether a validator is reported as offline in the current session',
             labelNames: ['name']
         });
     }

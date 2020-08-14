@@ -42,6 +42,27 @@ jobs:
           command: |
             /scripts/integration-tests.sh
 
+  testPrometheusRules:
+    docker:
+      - image: web3f/ci-commons:v2.4.0
+    steps:
+      - checkout
+      - run:
+          name: Install missing dependencies
+          command: |
+            YQ_VER=3.3.0
+            wget -O /usr/local/bin/yq https://github.com/mikefarah/yq/releases/download/${YQ_VER}/yq_linux_amd64
+            chmod +x /usr/local/bin/yq
+            
+            PROM_VER=2.18.1
+            wget -O /tmp/prometheus.tgz https://github.com/prometheus/prometheus/releases/download/v${PROM_VER}/prometheus-${PROM_VER}.linux-amd64.tar.gz
+            tar -xvf /tmp/prometheus.tgz prometheus-${PROM_VER}.linux-amd64/promtool -C /tmp
+            mv /tmp/prometheus-$PROM_VER.linux-amd64/promtool /usr/local/bin/
+      - run:
+          command: |
+            scripts/test_prometheus_rules.sh
+          
+
   publishImage:
     docker:
       - image: web3f/ci-commons:v2.3.0
@@ -86,6 +107,12 @@ workflows:
           requires:
             - helmLint
             - unitTest
+      - testPrometheusRules:
+          filters:
+            tags:
+              only: /.*/   
+          requires:
+            - helmLint     
       - publishImage:
           filters:
             branches:
@@ -95,6 +122,7 @@ workflows:
           requires:
             - buildImage
             - integrationTests
+            - testPrometheusRules
       - publishChart:
           filters:
             branches:
@@ -104,3 +132,4 @@ workflows:
           requires:
             - buildImage
             - integrationTests
+            - testPrometheusRules
