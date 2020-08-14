@@ -36,4 +36,5 @@ tests:
                       message: "Target node0 has either not authored any block or sent any heartbeat yet in this session"                    
           - eval_time: 15m # Values: 0 1 1 1 1 1 1 1 1 1 1 1 1 0 0
             alertname: ValidatorOfflineSessionLong
-            exp_alerts:                  
+            exp_alerts:   
+                           
