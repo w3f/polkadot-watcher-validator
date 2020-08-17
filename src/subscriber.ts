@@ -127,15 +127,15 @@ export class Subscriber {
     }
 
     private async _handleNewHeadSubscriptions(): Promise<void> {
-      this.subscribe.producers && this._initProducersSubscription();
-      this.subscribe.offline && this._initSessionOfflineSusbscription();
+      this.subscribe.producers && this._initProducerHandler();
+      this.subscribe.offline && this._initSessionOfflineHandler();
       this.api.rpc.chain.subscribeNewHeads(async (header) => {
-        this.subscribe.producers && await this._producersHandler(header);
+        this.subscribe.producers && await this._producerHandler(header);
         this.subscribe.offline && await this._sessionOfflineHandler(header);
       })
     }
 
-    private _initProducersSubscription(): void {
+    private _initProducerHandler(): void {
       this.validators.forEach((account) => {
         // always increase metric even the first time, so that we initialize the time serie
         // https://github.com/prometheus/prometheus/issues/1673
@@ -143,7 +143,7 @@ export class Subscriber {
       });
     }
 
-    private _initSessionOfflineSusbscription(): void {
+    private _initSessionOfflineHandler(): void {
       this.validators.forEach((account) => {
         // always increase metric even the first time, so that we initialize the time serie
         // https://github.com/prometheus/prometheus/issues/1673
@@ -151,7 +151,7 @@ export class Subscriber {
       });
     }
 
-    private async _producersHandler(header: Header): Promise<void> {
+    private async _producerHandler(header: Header): Promise<void> {
       // get block author
       const hash = await this.api.rpc.chain.getBlockHash(header.number.toNumber());
       const deriveHeader = await this.api.derive.chain.getHeader(hash);
