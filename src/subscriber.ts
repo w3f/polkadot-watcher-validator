@@ -57,14 +57,11 @@ export class Subscriber {
         if (this.subscribe.transactions) {
             await this._subscribeTransactions();
         }
-        if (this.subscribe.producers) {
-            await this._subscribeProducers();
-        }
+
+        await this._handleNewHeadSubscriptions();
+
         if (this.subscribe.offline) {
             await this._subscribeOffline();
-        }
-        if (this.subscribe.offline) {
-            await this._subscribePreventiveSessionOffline();
         }
     }
 
@@ -129,29 +126,59 @@ export class Subscriber {
         });
     }
 
-    private async _subscribeProducers(): Promise<void> {
-        this.validators.forEach((account) => {
-            // always increase metric even the first time, so that we initialize the time serie
-            // https://github.com/prometheus/prometheus/issues/1673
-            this.promClient.increaseTotalBlocksProduced(account.name, account.address)
-        });
+    private async _handleNewHeadSubscriptions(): Promise<void> {
+      this.subscribe.producers && this._initProducersSubscription();
+      this.subscribe.offline && this._initSessionOfflineSusbscription();
+      this.api.rpc.chain.subscribeNewHeads(async (header) => {
+        this.subscribe.producers && await this._producersHandler(header);
+        this.subscribe.offline && await this._sessionOfflineHandler(header);
+      })
+    }
 
-        this.api.rpc.chain.subscribeNewHeads(async (header) => {
-            // get block author
-            const hash = await this.api.rpc.chain.getBlockHash(header.number.toNumber());
-            const deriveHeader = await this.api.derive.chain.getHeader(hash);
-            const author = deriveHeader.author;
-            if (author) {
-                const account = this.validators.find((producer) => producer.address == author.toString());
-                if (account) {
-                    this.logger.info(`New block produced by ${account.name}`);
-                    this.promClient.increaseTotalBlocksProduced(account.name, account.address);
+    private _initProducersSubscription(): void {
+      this.validators.forEach((account) => {
+        // always increase metric even the first time, so that we initialize the time serie
+        // https://github.com/prometheus/prometheus/issues/1673
+        this.promClient.increaseTotalBlocksProduced(account.name, account.address)
+      });
+    }
 
-                    // reset potential offline counters
-                    this.promClient.resetTotalValidatorOfflineReports(account.name);
-                }
-            }
-        });
+    private _initSessionOfflineSusbscription(): void {
+      this.validators.forEach((account) => {
+        // always increase metric even the first time, so that we initialize the time serie
+        // https://github.com/prometheus/prometheus/issues/1673
+        this.promClient.resetStateValidatorOfflineSessionReports(account.name);
+      });
+    }
+
+    private async _producersHandler(header: Header): Promise<void> {
+      // get block author
+      const hash = await this.api.rpc.chain.getBlockHash(header.number.toNumber());
+      const deriveHeader = await this.api.derive.chain.getHeader(hash);
+      const author = deriveHeader.author;
+      if (author) {
+          const account = this.validators.find((producer) => producer.address == author.toString());
+          if (account) {
+              this.logger.info(`New block produced by ${account.name}`);
+              this.promClient.increaseTotalBlocksProduced(account.name, account.address);
+
+              // reset potential offline counters
+              this.promClient.resetTotalValidatorOfflineReports(account.name);
+          }
+      }
+    }
+
+    private async _sessionOfflineHandler(header: Header): Promise<void> {
+      const isHeartbeatExpected = await this._isHeadAfterHeartbeatBlockThreshold(header)
+      await asyncForEach(this.validators, async (account) => {
+        if( isHeartbeatExpected && ! await this._hasValidatorAuthoredBlocks(account) && ! await this._hasValidatorSentHeartbeat(account) ){
+            this.logger.info(`Target ${account.name} has either not authored any block or sent any heartbeat yet`);
+            this.promClient.setStateValidatorOfflineSessionReports(account.name)
+        }
+        else{
+            this.promClient.resetStateValidatorOfflineSessionReports(account.name)
+        }
+      })
     }
 
     private async _subscribeOffline(): Promise<void> {
@@ -180,28 +207,6 @@ export class Subscriber {
                     });
                 }
             });
-        });
-    }
-
-    private async _subscribePreventiveSessionOffline(): Promise<void> {
-
-        this.validators.forEach((account) => {
-            // always increase metric even the first time, so that we initialize the time serie
-            // https://github.com/prometheus/prometheus/issues/1673
-            this.promClient.resetStateValidatorOfflineSessionReports(account.name);
-        });
-
-        this.api.rpc.chain.subscribeNewHeads(async (lastHeader) => {
-            const isHeartbeatExpected = await this._isHeadAfterHeartbeatBlockThreshold(lastHeader)
-            await asyncForEach(this.validators, async (account) => {
-                if( isHeartbeatExpected && ! await this._hasValidatorAuthoredBlocks(account) && ! await this._hasValidatorSentHeartbeat(account) ){
-                    this.logger.info(`Target ${account.name} has either not authored any block or sent any heartbeat yet`);
-                    this.promClient.setStateValidatorOfflineSessionReports(account.name)
-                }
-                else{
-                    this.promClient.resetStateValidatorOfflineSessionReports(account.name)
-                }
-            })
         });
     }
 
