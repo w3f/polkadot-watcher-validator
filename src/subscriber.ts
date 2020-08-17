@@ -1,6 +1,6 @@
 import { ApiPromise, WsProvider } from '@polkadot/api';
 import { Event } from '@polkadot/types/interfaces/system';
-import { Balance, BlockNumber, Header } from '@polkadot/types/interfaces';
+import { Balance, BlockNumber, Header, SessionIndex } from '@polkadot/types/interfaces';
 import { Tuple } from '@polkadot/types/codec';
 import { Logger } from '@w3f/logger';
 
@@ -130,8 +130,8 @@ export class Subscriber {
       this.subscribe.producers && this._initProducerHandler();
       this.subscribe.offline && this._initSessionOfflineHandler();
       this.api.rpc.chain.subscribeNewHeads(async (header) => {
-        this.subscribe.producers && await this._producerHandler(header);
-        this.subscribe.offline && await this._sessionOfflineHandler(header);
+        this.subscribe.producers && this._producerHandler(header);
+        this.subscribe.offline && this._sessionOfflineHandler(header);
       })
     }
 
@@ -170,10 +170,12 @@ export class Subscriber {
 
     private async _sessionOfflineHandler(header: Header): Promise<void> {
       const isHeartbeatExpected = await this._isHeadAfterHeartbeatBlockThreshold(header)
-      await asyncForEach(this.validators, async (account) => {
-        if( isHeartbeatExpected && ! await this._hasValidatorAuthoredBlocks(account) && ! await this._hasValidatorSentHeartbeat(account) ){
-            this.logger.info(`Target ${account.name} has either not authored any block or sent any heartbeat yet`);
-            this.promClient.setStateValidatorOfflineSessionReports(account.name)
+      const sessionIndex = await this.api.query.session.currentIndex()
+
+     this.validators.forEach(async account => {
+        if( isHeartbeatExpected && ! await this._hasValidatorAuthoredBlocks(account,sessionIndex) && ! await this._hasValidatorSentHeartbeat(account,sessionIndex) ){
+          this.logger.info(`Target ${account.name} has either not authored any block or sent any heartbeat yet`);
+          this.promClient.setStateValidatorOfflineSessionReports(account.name)
         }
         else{
             this.promClient.resetStateValidatorOfflineSessionReports(account.name)
@@ -225,16 +227,12 @@ export class Subscriber {
         return currentBlock.cmp(blockThreshold) > 0
     }
 
-    private async _hasValidatorAuthoredBlocks(validator: Subscribable): Promise<boolean> {
-        const sessionIndex = await this.api.query.session.currentIndex()
+    private async _hasValidatorAuthoredBlocks(validator: Subscribable, sessionIndex: SessionIndex): Promise<boolean> {
         const numBlocksAuthored = await this.api.query.imOnline.authoredBlocks(sessionIndex,validator.address)
         return numBlocksAuthored.cmp(ZeroBN) > 0
     }
 
-    private async _hasValidatorSentHeartbeat(validator: Subscribable): Promise<boolean> {
-        //TODO this function needs a refactoring
-        const sessionIndex = await this.api.query.session.currentIndex()
-        
+    private async _hasValidatorSentHeartbeat(validator: Subscribable, sessionIndex: SessionIndex): Promise<boolean> {
         const validators = await this.api.query.session.validators() 
         if ( ! validators.includes(validator.address) ) {
             return false
