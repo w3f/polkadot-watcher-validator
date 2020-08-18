@@ -35,15 +35,8 @@ spec:
             port: {{ .Values.port }}
           initialDelaySeconds: 10
           timeoutSeconds: 200
-        {{ if ne .Values.environment "ci" }}
         resources:
-          limits:
-            cpu: 100m
-            memory: 500Mi
-          requests:
-            cpu: 100m
-            memory: 500Mi
-        {{ end }}
+          {{- toYaml .Values.resources | nindent 12 }}
         volumeMounts:
         - name: config
           mountPath: /app/config
