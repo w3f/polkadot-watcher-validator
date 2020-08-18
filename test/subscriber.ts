@@ -52,7 +52,7 @@ const testRPC = new TestPolkadotRPC();
 
 let subject: Subscriber;
 
-function delay(ms: number): Promise<unknown> {
+function delay(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
