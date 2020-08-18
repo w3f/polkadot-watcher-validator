@@ -26,16 +26,10 @@ networkId: kusama
 
 origin: cluster
 
-## EXAMPLE:
-##   resources:
-##     requests:
-##       cpu: "1000m"
-##       memory: "2Gi"
-##
 resources: 
   requests:
     cpu: "100m"
     memory: "500Mi"
   limits:
-    cpu: "300m"
+    cpu: "100m"
     memory: "500Mi" 
