@@ -175,7 +175,7 @@ export class Subscriber {
       this.validators.forEach(async account => {
 
         if(isHeartbeatExpected) {
-          if ( await this._hasValidatorAuthoredBlocks(account,sessionIndex) || await this._hasValidatorSentHeartbeat(account,sessionIndex) ) {
+          if ( await this._hasValidatorProvedOnline(account,sessionIndex) ) {
             this.promClient.resetStatusValidatorOffline(account.name);
           }
           else {
@@ -183,11 +183,17 @@ export class Subscriber {
             this.promClient.setStatusValidatorOffline(account.name);
           }
         }
-        else if ( this.promClient.isValidatorStatusOffline(account.name) && ( await this._hasValidatorAuthoredBlocks(account,sessionIndex) || await this._hasValidatorSentHeartbeat(account,sessionIndex) )) {
-          this.promClient.resetStatusValidatorOffline(account.name);
+        else if ( this.promClient.isValidatorStatusOffline(account.name) ) {
+          if ( await this._hasValidatorProvedOnline(account,sessionIndex) ){
+            this.promClient.resetStatusValidatorOffline(account.name);
+          }
         }
 
       }) 
+    }
+
+    private async _hasValidatorProvedOnline(account,sessionIndex){
+      return await this._hasValidatorAuthoredBlocks(account,sessionIndex) || await this._hasValidatorSentHeartbeat(account,sessionIndex)
     }
 
     private async _subscribeOffline(): Promise<void> {
