@@ -147,7 +147,7 @@ export class Subscriber {
       this.validators.forEach((account) => {
         // always increase metric even the first time, so that we initialize the time serie
         // https://github.com/prometheus/prometheus/issues/1673
-        this.promClient.resetStateValidatorOfflineSessionReports(account.name);
+        this.promClient.resetStatusValidatorOffline(account.name);
       });
     }
 
@@ -172,15 +172,22 @@ export class Subscriber {
       const isHeartbeatExpected = await this._isHeadAfterHeartbeatBlockThreshold(header)
       const sessionIndex = await this.api.query.session.currentIndex()
 
-     this.validators.forEach(async account => {
-        if( isHeartbeatExpected && ! await this._hasValidatorAuthoredBlocks(account,sessionIndex) && ! await this._hasValidatorSentHeartbeat(account,sessionIndex) ){
-          this.logger.info(`Target ${account.name} has either not authored any block or sent any heartbeat yet`);
-          this.promClient.setStateValidatorOfflineSessionReports(account.name)
+      this.validators.forEach(async account => {
+
+        if(isHeartbeatExpected) {
+          if ( await this._hasValidatorAuthoredBlocks(account,sessionIndex) || await this._hasValidatorSentHeartbeat(account,sessionIndex) ) {
+            this.promClient.resetStatusValidatorOffline(account.name);
+          }
+          else {
+            this.logger.info(`Target ${account.name} has either not authored any block or sent any heartbeat yet`);
+            this.promClient.setStatusValidatorOffline(account.name);
+          }
         }
-        else{
-            this.promClient.resetStateValidatorOfflineSessionReports(account.name)
+        else if ( this.promClient.isValidatorStatusOffline && ( await this._hasValidatorAuthoredBlocks(account,sessionIndex) || await this._hasValidatorSentHeartbeat(account,sessionIndex) )) {
+          this.promClient.resetStatusValidatorOffline(account.name);
         }
-      })
+
+      }) 
     }
 
     private async _subscribeOffline(): Promise<void> {
