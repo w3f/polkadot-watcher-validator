@@ -192,7 +192,7 @@ export class Subscriber {
       }) 
     }
 
-    private async _hasValidatorProvedOnline(account,sessionIndex){
+    private async _hasValidatorProvedOnline(account: Subscribable,sessionIndex: SessionIndex): Promise<boolean> {
       return await this._hasValidatorAuthoredBlocks(account,sessionIndex) || await this._hasValidatorSentHeartbeat(account,sessionIndex)
     }
 
