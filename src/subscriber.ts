@@ -183,7 +183,7 @@ export class Subscriber {
             this.promClient.setStatusValidatorOffline(account.name);
           }
         }
-        else if ( this.promClient.isValidatorStatusOffline && ( await this._hasValidatorAuthoredBlocks(account,sessionIndex) || await this._hasValidatorSentHeartbeat(account,sessionIndex) )) {
+        else if ( this.promClient.isValidatorStatusOffline(account.name) && ( await this._hasValidatorAuthoredBlocks(account,sessionIndex) || await this._hasValidatorSentHeartbeat(account,sessionIndex) )) {
           this.promClient.resetStatusValidatorOffline(account.name);
         }
 
