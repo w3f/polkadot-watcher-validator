@@ -8,6 +8,8 @@ tests:
       input_series:
           - series: 'polkadot_offline_validator_session_reports_state{name="node0"}'
             values: '0 0 1+0x10 0 0' # 0 0 1 1 1 1 1 1 1 1 1 1 1 0 0
+          - series: 'polkadot_validator_out_of_active_set_reports_state{name="node0"}'
+            values: '0 0 1 1 1 0 0'         
 
       alert_rule_test:
           # Test ValidatorOfflineSession alert
@@ -35,4 +37,18 @@ tests:
           - eval_time: 13m # Values: 0 0 1 1 1 1 1 1 1 1 1 1 0        
             alertname: ValidatorOfflineSessionLong
             exp_alerts:   
+           
+            # Test ValidatorOutOfActiveSet alert
+          - eval_time: 3m # Values: 0 0 1 1 
+            alertname: ValidatorOutOfActiveSet
+            exp_alerts:
+          - eval_time: 4m # Values: 0 0 1 1 1
+            alertname: ValidatorOutOfActiveSet
+            exp_alerts:
+              - exp_labels:
+                  severity: critical
+                  origin: cluster
+                  name: node0
+                exp_annotations:
+                    message: "Target node0 is not present in the current validation active set" 
                            

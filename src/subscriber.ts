@@ -31,6 +31,9 @@ export class Subscriber {
     private subscribe: SubscriberConfig;
     private validators: Array<Subscribable>;
     private _initializedTransactions: InitializedMap;
+    private currentEraIndex: number;
+    private validatorActiveSet: Vec<ValidatorId>;
+    private sessionIndex: SessionIndex;
 
     constructor(
         cfg: InputConfig,
@@ -53,16 +56,11 @@ export class Subscriber {
 
     public async start(): Promise<void> {
         await this._initAPI();
+        await this._initInstanceVariables();
 
-        if (this.subscribe.transactions) {
-            await this._subscribeTransactions();
-        }
-
+        this.subscribe.transactions && await this._subscribeTransactions();
         await this._handleNewHeadSubscriptions();
-
-        if (this.subscribe.offline) {
-            await this._subscribeOffline();
-        }
+        await this._subscribeEvents();
     }
 
     get isInitialized(): InitializedMap {
@@ -81,6 +79,12 @@ export class Subscriber {
         this.logger.info(
             `You are connected to chain ${chain} using ${nodeName} v${nodeVersion}`
         );
+    }
+
+    private async _initInstanceVariables(): Promise<void>{
+      this.sessionIndex = await this.api.query.session.currentIndex();
+      this.currentEraIndex = await (await this.api.query.staking.activeEra()).toJSON()['index'];
+      this.validatorActiveSet = await this.api.query.session.validators();
     }
 
     private async _subscribeTransactions(): Promise<void> {
@@ -177,24 +181,24 @@ export class Subscriber {
       }
     }
 
+    // if new era and if the case reset ValidatorOffline and setOutOfActive
+    // validator active set
+    // check afeter session event
+
     private async _sessionOfflineHandler(header: Header): Promise<void> {
       const isHeartbeatExpected = await this._isHeadAfterHeartbeatBlockThreshold(header)
-      const sessionIndex = await this.api.query.session.currentIndex()
-      const validatorActiveSet = await this.api.query.session.validators() // TODO This call can be optimized
+      const sessionIndex = this.sessionIndex 
 
       this.validators.forEach(async account => {
 
-        const validatorActiveSetIndex = this._getValidatorActiveSetIndex(account,validatorActiveSet)
+        const validatorActiveSetIndex = this._getValidatorActiveSetIndex(account)
         if ( validatorActiveSetIndex < 0 ) {
-          this.logger.debug(`Target ${account.name} not in the current validation active set`);
-          this.promClient.resetStatusValidatorOffline(account.name);
-          this.promClient.setStatusValidatorOutOfActiveSet(account.name);
+          this._handleValidatorOutOfActiveSetTrue(account)
           return 
         }
         else{
-          this.promClient.resetStatusValidatorOutOfActiveSet(account.name);
+          this._handleValidatorOutOfActiveSetFalse(account)
         }
-
 
         if(isHeartbeatExpected) {
           if ( await this._hasValidatorProvedOnline(account,validatorActiveSetIndex,sessionIndex) ) {
@@ -214,41 +218,76 @@ export class Subscriber {
       }) 
     }
 
+    private _handleValidatorOutOfActiveSetTrue(account: Subscribable): void{
+      this.logger.debug(`Target ${account.name} is not presente in the current validation active set`);
+      this.promClient.resetStatusValidatorOffline(account.name);
+      this.promClient.setStatusValidatorOutOfActiveSet(account.name);
+    }
+
+    private _handleValidatorOutOfActiveSetFalse(account: Subscribable): void{
+      this.promClient.resetStatusValidatorOutOfActiveSet(account.name);
+    }
+
     private async _hasValidatorProvedOnline(account: Subscribable, validatorIndex: number, sessionIndex: SessionIndex): Promise<boolean> {
       return await this._hasValidatorAuthoredBlocks(account,sessionIndex) || await this._hasValidatorSentHeartbeat(validatorIndex,sessionIndex)
     }
 
-    private async _subscribeOffline(): Promise<void> {
-        this.validators.forEach((account) => {
-            // always increase metric even the first time, so that we initialize the time serie
-            // https://github.com/prometheus/prometheus/issues/1673
-            this.promClient.resetTotalValidatorOfflineReports(account.name);
-        });
+    private async _subscribeEvents(): Promise<void> {
+        this.subscribe.offline && this._initTotalValidatorOffline();
 
         this.api.query.system.events((events) => {
-            events.forEach((record) => {
+            events.forEach(async (record) => {
                 const { event } = record;
 
-                if (this._isOfflineEvent(event)) {
-                    const items = event.data[0];
+                if (this.subscribe.offline && this._isOfflineEvent(event)) {
+                    this._offlineEventHandler(event)
+                }
 
-                    (items as Tuple).forEach((item) => {
-                        const offlineValidator = item[0];
-                        this.logger.info(`${offlineValidator} found offline`);
-                        const account = this.validators.find((subject) => subject.address == offlineValidator);
-
-                        if (account) {
-                            this.logger.info(`Target ${account.name} found offline`);
-                            this.promClient.increaseTotalValidatorOfflineReports(account.name, account.address);
-                        }
-                    });
+                else if (this._isNewSessionEvent(event)){
+                  await this._newSessionEventHandler()
                 }
             });
         });
     }
 
+    private _initTotalValidatorOffline(): void {
+      this.validators.forEach((account) => {
+        // always increase metric even the first time, so that we initialize the time serie
+        // https://github.com/prometheus/prometheus/issues/1673
+        this.promClient.resetTotalValidatorOfflineReports(account.name);
+      });
+    }
+
     private _isOfflineEvent(event: Event): boolean {
         return event.section == 'imOnline' && event.method == 'SomeOffline';
+    }
+
+    private _offlineEventHandler(event: Event): void {
+      const items = event.data[0];
+
+      (items as Tuple).forEach((item) => {
+          const offlineValidator = item[0];
+          this.logger.info(`${offlineValidator} found offline`);
+          const account = this.validators.find((subject) => subject.address == offlineValidator);
+
+          if (account) {
+              this.logger.info(`Target ${account.name} found offline`);
+              this.promClient.increaseTotalValidatorOfflineReports(account.name, account.address);
+          }
+      });
+    }
+
+    private async _newSessionEventHandler(): Promise<void> {
+      this.sessionIndex = await this.api.query.session.currentIndex(); // TODO improve, for sure it is present in event
+                  
+      const eraIndex = await (await this.api.query.staking.activeEra()).toJSON()['index']; 
+      if ( this.currentEraIndex >= eraIndex ) return;
+      this.currentEraIndex = eraIndex;
+      this.validatorActiveSet = await this.api.query.session.validators();
+    }
+
+    private _isNewSessionEvent(event: Event): boolean {
+      return event.section == 'session' && event.method == ' NewSession';
     }
 
     private async _getHeartbeatBlockThreshold(): Promise<BlockNumber> {
@@ -273,11 +312,11 @@ export class Subscriber {
         return hb.toHuman() ? true : false
     }
 
-    private _getValidatorActiveSetIndex(validator: Subscribable, validators: Vec<ValidatorId>): number{
-      if ( ! validators.includes(validator.address) ) {
+    private _getValidatorActiveSetIndex(validator: Subscribable): number{
+      if ( ! this.validatorActiveSet.includes(validator.address) ) {
           return -1
       }
-      return validators.indexOf(validator.address)
+      return this.validatorActiveSet.indexOf(validator.address)
     }
 
    

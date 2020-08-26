@@ -59,5 +59,14 @@ spec:
       for: 8m
       labels:
         severity: warning
-        origin: {{ .Values.origin }}      
+        origin: {{ .Values.origin }} 
+    - alert: ValidatorOutOfActiveSet
+      annotations:
+        message: 'Target {{`{{ $labels.name }}`}} is not present in the current validation active set'
+      expr: polkadot_validator_out_of_active_set_reports_state > 0
+      for: 2m
+      labels:
+        severity: critical
+        origin: {{ .Values.origin }}  
+            
 {{ end }}
