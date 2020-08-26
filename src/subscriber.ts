@@ -132,8 +132,11 @@ export class Subscriber {
 
     private async _handleNewHeadSubscriptions(): Promise<void> {
       this.subscribe.producers && this._initProducerHandler();
-      this.subscribe.offline && this._initSessionOfflineHandler();
-      this.subscribe.offline && await this._initOutOfActiveSetHandler();
+      if (this.subscribe.offline) {
+        this._initSessionOfflineHandler();
+        this._initOutOfActiveSetHandler();
+      }
+      
       this.api.rpc.chain.subscribeNewHeads(async (header) => {
         this.subscribe.producers && this._producerHandler(header);
         this.subscribe.offline && this._sessionOfflineHandler(header);
@@ -240,6 +243,7 @@ export class Subscriber {
                 }
 
                 else if (this._isNewSessionEvent(event)){
+                  console.log("NEW SESSION !!!!!!!",event)
                   await this._newSessionEventHandler()
                 }
             });
@@ -283,7 +287,7 @@ export class Subscriber {
     }
 
     private async _getActiveEraIndex(): Promise<number>{
-      return await (await this.api.query.staking.activeEra()).toJSON()['index']; 
+      return (await this.api.query.staking.activeEra()).toJSON()['index']; 
     }
 
     private async _newEraHandler(newEraIndex: number): Promise<void>{
@@ -318,9 +322,6 @@ export class Subscriber {
     }
 
     private _getValidatorActiveSetIndex(validator: Subscribable): number{
-      if ( ! this.validatorActiveSet.includes(validator.address) ) {
-          return -1
-      }
       return this.validatorActiveSet.indexOf(validator.address)
     }
 
