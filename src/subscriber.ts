@@ -181,10 +181,6 @@ export class Subscriber {
       }
     }
 
-    // if new era and if the case reset ValidatorOffline and setOutOfActive
-    // validator active set
-    // check afeter session event
-
     private async _sessionOfflineHandler(header: Header): Promise<void> {
       const isHeartbeatExpected = await this._isHeadAfterHeartbeatBlockThreshold(header)
       const sessionIndex = this.sessionIndex 
@@ -280,9 +276,13 @@ export class Subscriber {
     private async _newSessionEventHandler(): Promise<void> {
       this.sessionIndex = await this.api.query.session.currentIndex(); // TODO improve, for sure it is present in event
                   
-      const eraIndex = await (await this.api.query.staking.activeEra()).toJSON()['index']; 
-      if ( this.currentEraIndex >= eraIndex ) return;
-      this.currentEraIndex = eraIndex;
+      const newEraIndex = await (await this.api.query.staking.activeEra()).toJSON()['index']; 
+      if ( this.currentEraIndex >= newEraIndex ) return;
+      this._newEraHandler(newEraIndex)
+    }
+
+    private async _newEraHandler(newEraIndex:number){
+      this.currentEraIndex = newEraIndex;
       this.validatorActiveSet = await this.api.query.session.validators();
     }
 
