@@ -30,6 +30,8 @@ export interface PromClient {
     setStatusValidatorOffline(name: string): void;
     resetStatusValidatorOffline(name: string): void;
     isValidatorStatusOffline(name: string): boolean;
+    setStatusValidatorOutOfActiveSet(name: string): void;
+    resetStatusValidatorOutOfActiveSet(name: string): void;
 }
 
 export enum TransactionType {

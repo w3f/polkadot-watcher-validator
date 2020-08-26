@@ -1,7 +1,7 @@
 import { ApiPromise, WsProvider } from '@polkadot/api';
 import { Event } from '@polkadot/types/interfaces/system';
-import { Balance, BlockNumber, Header, SessionIndex } from '@polkadot/types/interfaces';
-import { Tuple } from '@polkadot/types/codec';
+import { Balance, BlockNumber, Header, SessionIndex, ValidatorId } from '@polkadot/types/interfaces';
+import { Tuple, Vec } from '@polkadot/types/codec';
 import { Logger } from '@w3f/logger';
 
 import {
@@ -129,6 +129,7 @@ export class Subscriber {
     private async _handleNewHeadSubscriptions(): Promise<void> {
       this.subscribe.producers && this._initProducerHandler();
       this.subscribe.offline && this._initSessionOfflineHandler();
+      this.subscribe.offline && await this._initOutOfActiveSetHandler();
       this.api.rpc.chain.subscribeNewHeads(async (header) => {
         this.subscribe.producers && this._producerHandler(header);
         this.subscribe.offline && this._sessionOfflineHandler(header);
@@ -148,6 +149,14 @@ export class Subscriber {
         // always increase metric even the first time, so that we initialize the time serie
         // https://github.com/prometheus/prometheus/issues/1673
         this.promClient.resetStatusValidatorOffline(account.name);
+      });
+    }
+
+    private _initOutOfActiveSetHandler(): void {
+      this.validators.forEach((account) => {
+        // always increase metric even the first time, so that we initialize the time serie
+        // https://github.com/prometheus/prometheus/issues/1673
+        this.promClient.resetStatusValidatorOutOfActiveSet(account.name);
       });
     }
 
@@ -171,11 +180,24 @@ export class Subscriber {
     private async _sessionOfflineHandler(header: Header): Promise<void> {
       const isHeartbeatExpected = await this._isHeadAfterHeartbeatBlockThreshold(header)
       const sessionIndex = await this.api.query.session.currentIndex()
+      const validatorActiveSet = await this.api.query.session.validators() // TODO This call can be optimized
 
       this.validators.forEach(async account => {
 
+        const validatorActiveSetIndex = this._getValidatorActiveSetIndex(account,validatorActiveSet)
+        if ( validatorActiveSetIndex < 0 ) {
+          this.logger.debug(`Target ${account.name} not in the current validation active set`);
+          this.promClient.resetStatusValidatorOffline(account.name);
+          this.promClient.setStatusValidatorOutOfActiveSet(account.name);
+          return 
+        }
+        else{
+          this.promClient.resetStatusValidatorOutOfActiveSet(account.name);
+        }
+
+
         if(isHeartbeatExpected) {
-          if ( await this._hasValidatorProvedOnline(account,sessionIndex) ) {
+          if ( await this._hasValidatorProvedOnline(account,validatorActiveSetIndex,sessionIndex) ) {
             this.promClient.resetStatusValidatorOffline(account.name);
           }
           else {
@@ -184,7 +206,7 @@ export class Subscriber {
           }
         }
         else if ( this.promClient.isValidatorStatusOffline(account.name) ) {
-          if ( await this._hasValidatorProvedOnline(account,sessionIndex) ){
+          if ( await this._hasValidatorProvedOnline(account,validatorActiveSetIndex, sessionIndex) ){
             this.promClient.resetStatusValidatorOffline(account.name);
           }
         }
@@ -192,8 +214,8 @@ export class Subscriber {
       }) 
     }
 
-    private async _hasValidatorProvedOnline(account: Subscribable,sessionIndex: SessionIndex): Promise<boolean> {
-      return await this._hasValidatorAuthoredBlocks(account,sessionIndex) || await this._hasValidatorSentHeartbeat(account,sessionIndex)
+    private async _hasValidatorProvedOnline(account: Subscribable, validatorIndex: number, sessionIndex: SessionIndex): Promise<boolean> {
+      return await this._hasValidatorAuthoredBlocks(account,sessionIndex) || await this._hasValidatorSentHeartbeat(validatorIndex,sessionIndex)
     }
 
     private async _subscribeOffline(): Promise<void> {
@@ -245,15 +267,17 @@ export class Subscriber {
         return numBlocksAuthored.cmp(ZeroBN) > 0
     }
 
-    private async _hasValidatorSentHeartbeat(validator: Subscribable, sessionIndex: SessionIndex): Promise<boolean> {
-        const validators = await this.api.query.session.validators() 
-        if ( ! validators.includes(validator.address) ) {
-            return false
-        }
-        const validatorIndex = validators.indexOf(validator.address)
-        
+    private async _hasValidatorSentHeartbeat(validatorIndex: number, sessionIndex: SessionIndex): Promise<boolean> {
+        if (validatorIndex < 0) return false;
         const hb = await this.api.query.imOnline.receivedHeartbeats(sessionIndex,validatorIndex) 
         return hb.toHuman() ? true : false
+    }
+
+    private _getValidatorActiveSetIndex(validator: Subscribable, validators: Vec<ValidatorId>): number{
+      if ( ! validators.includes(validator.address) ) {
+          return -1
+      }
+      return validators.indexOf(validator.address)
     }
 
    
