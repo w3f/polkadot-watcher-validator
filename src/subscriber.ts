@@ -278,10 +278,10 @@ export class Subscriber {
                   
       const newEraIndex = await (await this.api.query.staking.activeEra()).toJSON()['index']; 
       if ( this.currentEraIndex >= newEraIndex ) return;
-      this._newEraHandler(newEraIndex)
+      await this._newEraHandler(newEraIndex)
     }
 
-    private async _newEraHandler(newEraIndex:number){
+    private async _newEraHandler(newEraIndex: number): Promise<void>{
       this.currentEraIndex = newEraIndex;
       this.validatorActiveSet = await this.api.query.session.validators();
     }
