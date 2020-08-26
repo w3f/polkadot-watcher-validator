@@ -83,7 +83,7 @@ export class Subscriber {
 
     private async _initInstanceVariables(): Promise<void>{
       this.sessionIndex = await this.api.query.session.currentIndex();
-      this.currentEraIndex = await (await this.api.query.staking.activeEra()).toJSON()['index'];
+      this.currentEraIndex = await this._getActiveEraIndex();
       this.validatorActiveSet = await this.api.query.session.validators();
     }
 
@@ -276,9 +276,14 @@ export class Subscriber {
     private async _newSessionEventHandler(): Promise<void> {
       this.sessionIndex = await this.api.query.session.currentIndex(); // TODO improve, for sure it is present in event
                   
-      const newEraIndex = await (await this.api.query.staking.activeEra()).toJSON()['index']; 
-      if ( this.currentEraIndex >= newEraIndex ) return;
-      await this._newEraHandler(newEraIndex)
+      const newEraIndex = await this._getActiveEraIndex();
+      if( newEraIndex > this.currentEraIndex ){
+        await this._newEraHandler(newEraIndex)
+      }
+    }
+
+    private async _getActiveEraIndex(): Promise<number>{
+      return await (await this.api.query.staking.activeEra()).toJSON()['index']; 
     }
 
     private async _newEraHandler(newEraIndex: number): Promise<void>{
