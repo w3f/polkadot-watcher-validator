@@ -139,7 +139,7 @@ export class Subscriber {
       
       this.api.rpc.chain.subscribeNewHeads(async (header) => {
         this.subscribe.producers && this._producerHandler(header);
-        this.subscribe.offline && this._sessionOfflineHandler(header);
+        this.subscribe.offline && this._validatorStatusHandler(header);
       })
     }
 
@@ -184,9 +184,8 @@ export class Subscriber {
       }
     }
 
-    private async _sessionOfflineHandler(header: Header): Promise<void> {
+    private async _validatorStatusHandler(header: Header): Promise<void> {
       const isHeartbeatExpected = await this._isHeadAfterHeartbeatBlockThreshold(header)
-      const sessionIndex = this.sessionIndex 
 
       this.validators.forEach(async account => {
 
@@ -199,22 +198,28 @@ export class Subscriber {
           this._handleValidatorOutOfActiveSetFalse(account)
         }
 
-        if(isHeartbeatExpected) {
-          if ( await this._hasValidatorProvedOnline(account,validatorActiveSetIndex,sessionIndex) ) {
-            this.promClient.resetStatusValidatorOffline(account.name);
-          }
-          else {
-            this.logger.info(`Target ${account.name} has either not authored any block or sent any heartbeat yet`);
-            this.promClient.setStatusValidatorOffline(account.name);
-          }
-        }
-        else if ( this.promClient.isValidatorStatusOffline(account.name) ) {
-          if ( await this._hasValidatorProvedOnline(account,validatorActiveSetIndex, sessionIndex) ){
-            this.promClient.resetStatusValidatorOffline(account.name);
-          }
-        }
-
+        await this._handleValidatorOffline(isHeartbeatExpected,account,validatorActiveSetIndex)
       }) 
+      
+    }
+
+    private async _handleValidatorOffline(isHeartbeatExpected: boolean,validator: Subscribable,validatorActiveSetIndex: number): Promise<void>{
+  
+      if(isHeartbeatExpected) {
+        if ( await this._hasValidatorProvedOnline(validator,validatorActiveSetIndex,this.sessionIndex) ) {
+          this.promClient.resetStatusValidatorOffline(validator.name);
+        }
+        else {
+          this.logger.info(`Target ${validator.name} has either not authored any block or sent any heartbeat yet`);
+          this.promClient.setStatusValidatorOffline(validator.name);
+        }
+      }
+      else if ( this.promClient.isValidatorStatusOffline(validator.name) ) {
+        if ( await this._hasValidatorProvedOnline(validator,validatorActiveSetIndex, this.sessionIndex) ){
+          this.promClient.resetStatusValidatorOffline(validator.name);
+        }
+      }
+      
     }
 
     private _handleValidatorOutOfActiveSetTrue(account: Subscribable): void{
@@ -235,6 +240,7 @@ export class Subscriber {
         this.subscribe.offline && this._initTotalValidatorOffline();
 
         this.api.query.system.events((events) => {
+
             events.forEach(async (record) => {
                 const { event } = record;
 
@@ -242,8 +248,7 @@ export class Subscriber {
                     this._offlineEventHandler(event)
                 }
 
-                else if (this._isNewSessionEvent(event)){
-                  console.log("NEW SESSION !!!!!!!",event)
+                if (this._isNewSessionEvent(event)){
                   await this._newSessionEventHandler()
                 }
             });
@@ -296,7 +301,7 @@ export class Subscriber {
     }
 
     private _isNewSessionEvent(event: Event): boolean {
-      return event.section == 'session' && event.method == ' NewSession';
+      return event.section == 'session' && event.method == 'NewSession';
     }
 
     private async _getHeartbeatBlockThreshold(): Promise<BlockNumber> {
