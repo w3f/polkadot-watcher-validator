@@ -2,14 +2,17 @@ import * as express from 'express';
 import { register } from 'prom-client';
 import * as promClient from 'prom-client';
 import { Logger } from '@w3f/logger';
-
 import { PromClient } from './types';
 
 
 export class Prometheus implements PromClient {
+
+    static readonly nameValidatorOfflineSessionMetric  = 'polkadot_offline_validator_session_reports_state';
+
     private totalBlocksProduced: promClient.Counter;
     private totalValidatorOfflineReports: promClient.Gauge;
     private stateValidatorOfflineSessionReports: promClient.Gauge;
+    private stateValidatorOutOfActiveSetReports: promClient.Gauge;
 
     constructor(private readonly logger: Logger) {
         this._initMetrics()
@@ -41,12 +44,24 @@ export class Prometheus implements PromClient {
         this.totalValidatorOfflineReports.set({ name }, 1);
     }
 
-    setStateValidatorOfflineSessionReports(name: string): void {
-        this.stateValidatorOfflineSessionReports.set({ name }, 1);
+    setStatusValidatorOffline(name: string): void {
+        this.stateValidatorOfflineSessionReports.set({ name }, 1);        
     }
 
-    resetStateValidatorOfflineSessionReports(name: string): void {
+    resetStatusValidatorOffline(name: string): void {
         this.stateValidatorOfflineSessionReports.set({ name }, 0);
+    }
+
+    isValidatorStatusOffline(name: string): boolean {
+      return promClient.register.getSingleMetric(Prometheus.nameValidatorOfflineSessionMetric)['hashMap']['name:'+name]['value'] === 1
+    }
+
+    setStatusValidatorOutOfActiveSet(name: string): void{
+      this.stateValidatorOutOfActiveSetReports.set({ name }, 1);        
+    }
+
+    resetStatusValidatorOutOfActiveSet(name: string): void{
+      this.stateValidatorOutOfActiveSetReports.set({ name }, 0);        
     }
 
     _initMetrics(): void {
@@ -61,9 +76,14 @@ export class Prometheus implements PromClient {
             labelNames: ['name']
         });
         this.stateValidatorOfflineSessionReports = new promClient.Gauge({
-            name: 'polkadot_offline_validator_session_reports_state',
+            name: Prometheus.nameValidatorOfflineSessionMetric,
             help: 'Whether a validator is reported as offline in the current session',
             labelNames: ['name']
         });
+        this.stateValidatorOutOfActiveSetReports = new promClient.Gauge({
+          name: 'polkadot_validator_out_of_active_set_reports_state',
+          help: 'Whether a validator is reported as outside of the current Era validators active set',
+          labelNames: ['name']
+      });
     }
 }

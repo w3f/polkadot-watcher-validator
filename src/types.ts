@@ -27,8 +27,11 @@ export interface PromClient {
     increaseTotalBlocksProduced(name: string, address: string): void;
     increaseTotalValidatorOfflineReports(name: string, address: string): void;
     resetTotalValidatorOfflineReports(name: string): void;
-    setStateValidatorOfflineSessionReports(name: string): void;
-    resetStateValidatorOfflineSessionReports(name: string): void;
+    setStatusValidatorOffline(name: string): void;
+    resetStatusValidatorOffline(name: string): void;
+    isValidatorStatusOffline(name: string): boolean;
+    setStatusValidatorOutOfActiveSet(name: string): void;
+    resetStatusValidatorOutOfActiveSet(name: string): void;
 }
 
 export enum TransactionType {
