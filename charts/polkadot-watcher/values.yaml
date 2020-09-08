@@ -3,7 +3,7 @@ port: 3000
 
 image:
   repo: web3f/polkadot-watcher
-  tag: latest
+  tag: 0.9.0
 
 config:
   endpoint: "wss://cc3-3.kusama.network"
@@ -26,10 +26,10 @@ networkId: kusama
 
 origin: cluster
 
-resources: 
+resources:
   requests:
     cpu: "100m"
     memory: "500Mi"
   limits:
     cpu: "100m"
-    memory: "500Mi" 
+    memory: "500Mi"
