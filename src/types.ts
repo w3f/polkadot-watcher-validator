@@ -8,7 +8,6 @@ export interface Subscribable {
 }
 
 export interface SubscriberConfig {
-    transactions: Array<Subscribable>;
     producers: boolean;
     offline: boolean;
 }
@@ -32,40 +31,4 @@ export interface PromClient {
     isValidatorStatusOffline(name: string): boolean;
     setStatusValidatorOutOfActiveSet(name: string): void;
     resetStatusValidatorOutOfActiveSet(name: string): void;
-}
-
-export enum TransactionType {
-    Received,
-    Sent
-}
-
-export interface TransactionData extends Subscribable {
-    txType?: TransactionType;
-    networkId: string;
-}
-
-export interface Notifier {
-    newTransaction(data: TransactionData): Promise<string>;
-}
-
-interface LabelMap {
-    alertname: string;
-    severity: string;
-}
-
-interface Annotation {
-    description: string;
-}
-
-interface Alert {
-    status: string;
-    labels: LabelMap;
-    annotations: Annotation;
-}
-
-export interface MatrixbotMsg {
-    receiver: string;
-    status: string;
-    alerts: Array<Alert>;
-    version: string;
 }

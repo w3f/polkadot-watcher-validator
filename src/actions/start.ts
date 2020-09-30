@@ -4,7 +4,6 @@ import { Config } from '@w3f/config';
 
 import { Subscriber } from '../subscriber';
 import { Prometheus } from '../prometheus';
-import { Matrixbot } from '../matrixbot';
 import { InputConfig } from '../types';
 
 
@@ -24,8 +23,6 @@ export async function startAction(cmd): Promise<void> {
     promClient.injectMetricsRoute(server);
     promClient.startCollection();
 
-    const notifier = new Matrixbot(cfg.matrixbot.endpoint);
-
-    const subscriber = new Subscriber(cfg, promClient, notifier, logger);
+    const subscriber = new Subscriber(cfg, promClient, logger);
     await subscriber.start();
 }
