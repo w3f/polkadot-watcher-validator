@@ -4,7 +4,7 @@ jobs:
   unitTest:
     docker:
       - image: web3f/node-dind:v0.3.0
-      - image: parity/polkadot:v0.8.24 
+      - image: parity/polkadot:v0.8.25 
         name: polkadot
         command: --chain=kusama-dev --ws-port 11000 --alice --ws-external --rpc-methods=Unsafe --rpc-cors=all
     steps:
@@ -53,7 +53,7 @@ jobs:
             YQ_VER=3.3.0
             wget -O /usr/local/bin/yq https://github.com/mikefarah/yq/releases/download/${YQ_VER}/yq_linux_amd64
             chmod +x /usr/local/bin/yq
-            
+
             PROM_VER=2.18.1
             wget -O /tmp/prometheus.tgz https://github.com/prometheus/prometheus/releases/download/v${PROM_VER}/prometheus-${PROM_VER}.linux-amd64.tar.gz
             tar -xvf /tmp/prometheus.tgz prometheus-${PROM_VER}.linux-amd64/promtool -C /tmp
@@ -61,7 +61,7 @@ jobs:
       - run:
           command: |
             scripts/test_prometheus_rules.sh
-          
+
 
   publishImage:
     docker:
@@ -110,9 +110,9 @@ workflows:
       - testPrometheusRules:
           filters:
             tags:
-              only: /.*/   
+              only: /.*/
           requires:
-            - helmLint     
+            - helmLint
       - publishImage:
           filters:
             branches:
