@@ -1,6 +1,6 @@
 {
   "name": "polkadot-watcher",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "Monitor events on Polkadot networks",
   "repository": "git@github.com:w3f/polkadot-watcher.git",
   "author": "W3F Infrastructure Team <devops@web3.foundation>",

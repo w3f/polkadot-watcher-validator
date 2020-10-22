@@ -11,7 +11,7 @@ import {
     PromClient,
     Notifier,
     TransactionType,
-    TransactionData
+    TransactionData, ValidatorImOnlineParameters
 } from './types';
 import { ZeroBalance, ZeroBN } from './constants';
 import { asyncForEach } from './async';
@@ -185,37 +185,38 @@ export class Subscriber {
     }
 
     private async _validatorStatusHandler(header: Header): Promise<void> {
-      const isHeartbeatExpected = await this._isHeadAfterHeartbeatBlockThreshold(header)
+      const parameters = await this._getImOnlineParametersAtomic(header)
 
       this.validators.forEach(async account => {
 
-        const validatorActiveSetIndex = this._getValidatorActiveSetIndex(account)
+        const validatorActiveSetIndex = parameters.validatorActiveSet.indexOf(account.address)
         if ( validatorActiveSetIndex < 0 ) {
           this._handleValidatorOutOfActiveSetTrue(account)
+          this.logger.debug(`Target ${account.name} is not presente in the validation active set of era ${parameters.eraIndex}`);
           return 
         }
         else{
           this._handleValidatorOutOfActiveSetFalse(account)
         }
 
-        await this._handleValidatorOffline(isHeartbeatExpected,account,validatorActiveSetIndex)
+        await this._handleValidatorOffline(parameters,account,validatorActiveSetIndex)
       }) 
       
     }
 
-    private async _handleValidatorOffline(isHeartbeatExpected: boolean,validator: Subscribable,validatorActiveSetIndex: number): Promise<void>{
+    private async _handleValidatorOffline(parameters: ValidatorImOnlineParameters,validator: Subscribable,validatorActiveSetIndex: number): Promise<void>{
   
-      if(isHeartbeatExpected) {
-        if ( await this._hasValidatorProvedOnline(validator,validatorActiveSetIndex,this.sessionIndex) ) {
+      if(parameters.isHeartbeatExpected) {
+        if ( await this._hasValidatorProvedOnline(validator,validatorActiveSetIndex,parameters.sessionIndex) ) {
           this.promClient.resetStatusValidatorOffline(validator.name);
         }
         else {
-          this.logger.info(`Target ${validator.name} has either not authored any block or sent any heartbeat yet`);
+          this.logger.info(`Target ${validator.name} has either not authored any block or sent any heartbeat yet in session:${parameters.sessionIndex}/era:${parameters.eraIndex}`);
           this.promClient.setStatusValidatorOffline(validator.name);
         }
       }
       else if ( this.promClient.isValidatorStatusOffline(validator.name) ) {
-        if ( await this._hasValidatorProvedOnline(validator,validatorActiveSetIndex, this.sessionIndex) ){
+        if ( await this._hasValidatorProvedOnline(validator,validatorActiveSetIndex,parameters.sessionIndex) ){
           this.promClient.resetStatusValidatorOffline(validator.name);
         }
       }
@@ -223,7 +224,6 @@ export class Subscriber {
     }
 
     private _handleValidatorOutOfActiveSetTrue(account: Subscribable): void{
-      this.logger.debug(`Target ${account.name} is not presente in the current validation active set`);
       this.promClient.resetStatusValidatorOffline(account.name);
       this.promClient.setStatusValidatorOutOfActiveSet(account.name);
     }
@@ -308,6 +308,22 @@ export class Subscriber {
         return this.api.query.imOnline.heartbeatAfter()
     }
 
+    private async _getImOnlineParametersAtomic(header: Header): Promise<ValidatorImOnlineParameters> {
+    
+      const sessionIndex = this.sessionIndex
+      const eraIndex = this.currentEraIndex
+      const validatorActiveSet = this.validatorActiveSet
+      this.logger.debug(`Current EraIndex: ${eraIndex}\tCurrent SessionIndex: ${sessionIndex}`);
+      const isHeartbeatExpected = await this._isHeadAfterHeartbeatBlockThreshold(header)
+
+      return {
+        isHeartbeatExpected,
+        sessionIndex,
+        eraIndex,
+        validatorActiveSet
+      } 
+    }
+
     private async _isHeadAfterHeartbeatBlockThreshold(header: Header): Promise<boolean> {
         const currentBlock = header.number.toBn()
         const blockThreshold = await this._getHeartbeatBlockThreshold()
@@ -324,10 +340,6 @@ export class Subscriber {
         if (validatorIndex < 0) return false;
         const hb = await this.api.query.imOnline.receivedHeartbeats(sessionIndex,validatorIndex) 
         return hb.toHuman() ? true : false
-    }
-
-    private _getValidatorActiveSetIndex(validator: Subscribable): number{
-      return this.validatorActiveSet.indexOf(validator.address)
     }
 
    
