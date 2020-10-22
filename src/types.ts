@@ -1,3 +1,6 @@
+import { SessionIndex, ValidatorId } from '@polkadot/types/interfaces';
+import { Vec } from '@polkadot/types/codec';
+
 export interface MatrixbotConfig {
     endpoint: string;
 }
@@ -68,4 +71,11 @@ export interface MatrixbotMsg {
     status: string;
     alerts: Array<Alert>;
     version: string;
+}
+
+export interface ValidatorImOnlineParameters {
+  isHeartbeatExpected: boolean;
+  sessionIndex: SessionIndex;
+  eraIndex: number;
+  validatorActiveSet: Vec<ValidatorId>;
 }
