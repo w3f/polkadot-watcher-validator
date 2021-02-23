@@ -91,7 +91,7 @@ function checkTransaction(expectedName: string, expectedTxType: TransactionType)
 
 describe('Subscriber', () => {
     before(async () => {
-        await testRPC.start('0.7.33');
+        await testRPC.start();
 
         keyring = new Keyring({ type: 'sr25519' });
 
