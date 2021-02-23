@@ -95,6 +95,7 @@ workflows:
             tags:
               only: /.*/
       - buildImage:
+          context: dockerhub-bot
           filters:
             tags:
               only: /.*/
@@ -114,6 +115,7 @@ workflows:
           requires:
             - helmLint
       - publishImage:
+          context: dockerhub-bot
           filters:
             branches:
               ignore: /.*/
@@ -124,6 +126,7 @@ workflows:
             - integrationTests
             - testPrometheusRules
       - publishChart:
+          context: github-bot
           filters:
             branches:
               ignore: /.*/
