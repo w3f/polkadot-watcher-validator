@@ -3,7 +3,7 @@ port: 3000
 
 image:
   repo: web3f/polkadot-watcher
-  tag: v0.10.0
+  tag: v0.10.1
 
 config:
   endpoint: "wss://cc3-3.kusama.network"
