@@ -36,6 +36,10 @@ export class Prometheus implements PromClient {
         this.totalBlocksProduced.inc({ name, account })
     }
 
+    initTotalBlocksProduced(name: string, account: string): void {
+      this.totalBlocksProduced.inc({ name, account },0)
+  }
+
     increaseTotalValidatorOfflineReports(name: string): void {
         this.totalValidatorOfflineReports.inc({ name });
     }

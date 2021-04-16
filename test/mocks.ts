@@ -1,43 +1,51 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-import { TransactionData } from '../src/types';
+import { PromClient } from "../src/types";
 
 
-export class PrometheusMock {
+export class PrometheusMock implements PromClient {
     private _totalBlocksProduced = 0;
+    private _totalValidatorOfflineReports = 0;
+    private _stateValidatorOffline = 0;
+    private _stateValidatorOutOfActiveSet = 0;
 
     increaseTotalBlocksProduced(name: string, address: string): void {
         this._totalBlocksProduced++;
     }
+
+    initTotalBlocksProduced(name: string, address: string): void {
+      this._totalBlocksProduced = 0;
+    }
+    
     increaseTotalValidatorOfflineReports(name: string, address: string): void { }
     resetTotalValidatorOfflineReports(name: string): void { }
 
-    setStatusValidatorOffline(name: string): void {}
-    resetStatusValidatorOffline(name: string): void {}
-    isValidatorStatusOffline(name: string): boolean {return true}
+    setStatusValidatorOffline(name: string): void {
+      this._stateValidatorOffline = 1
+    }
+    resetStatusValidatorOffline(name: string): void {
+      this._stateValidatorOffline = 0
+    }
+    isValidatorStatusOffline(name: string): boolean {return false}
 
-    setStatusValidatorOutOfActiveSet(name: string): void {}
-    resetStatusValidatorOutOfActiveSet(name: string): void {}
+    setStatusValidatorOutOfActiveSet(name: string): void {
+      this._stateValidatorOutOfActiveSet = 1
+    }
+    resetStatusValidatorOutOfActiveSet(name: string): void {
+      this._stateValidatorOutOfActiveSet = 0
+    }
 
     get totalBlocksProduced(): number {
         return this._totalBlocksProduced;
     }
-}
-
-export class NotifierMock {
-    private _receivedData: Array<TransactionData> = [];
-
-    async newTransaction(data: TransactionData): Promise<string> {
-        this._receivedData.push(data);
-        return "";
+    get totalValidatorOfflineReports(): number {
+      return this._totalValidatorOfflineReports;
     }
-
-    get receivedData(): Array<TransactionData> {
-        return this._receivedData;
+    get statusValidatorOffline(): number {
+      return this._stateValidatorOffline;
     }
-
-    resetReceivedData(): void {
-        this._receivedData = [];
+    get statusValidatorOutOfActiveSet(): number {
+      return this._stateValidatorOutOfActiveSet;
     }
 }
