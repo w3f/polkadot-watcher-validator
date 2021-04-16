@@ -11,7 +11,6 @@ export interface Subscribable {
 }
 
 export interface SubscriberConfig {
-    transactions: Array<Subscribable>;
     producers: boolean;
     offline: boolean;
 }
@@ -19,15 +18,14 @@ export interface SubscriberConfig {
 export interface InputConfig {
     logLevel: string;
     port: number;
-    matrixbot: MatrixbotConfig;
     endpoint: string;
-    networkId: string;
     subscribe: SubscriberConfig;
     validators: Array<Subscribable>;
 }
 
 export interface PromClient {
     increaseTotalBlocksProduced(name: string, address: string): void;
+    initTotalBlocksProduced(name: string, address: string): void;
     increaseTotalValidatorOfflineReports(name: string, address: string): void;
     resetTotalValidatorOfflineReports(name: string): void;
     setStatusValidatorOffline(name: string): void;
@@ -35,20 +33,6 @@ export interface PromClient {
     isValidatorStatusOffline(name: string): boolean;
     setStatusValidatorOutOfActiveSet(name: string): void;
     resetStatusValidatorOutOfActiveSet(name: string): void;
-}
-
-export enum TransactionType {
-    Received,
-    Sent
-}
-
-export interface TransactionData extends Subscribable {
-    txType?: TransactionType;
-    networkId: string;
-}
-
-export interface Notifier {
-    newTransaction(data: TransactionData): Promise<string>;
 }
 
 interface LabelMap {

@@ -1,6 +1,6 @@
 import { ApiPromise, WsProvider } from '@polkadot/api';
 import { Event } from '@polkadot/types/interfaces/system';
-import { Balance, BlockNumber, Header, SessionIndex, ValidatorId } from '@polkadot/types/interfaces';
+import { BlockNumber, Header, SessionIndex, ValidatorId } from '@polkadot/types/interfaces';
 import { Tuple, Vec } from '@polkadot/types/codec';
 import { Logger } from '@w3f/logger';
 
@@ -9,28 +9,15 @@ import {
     SubscriberConfig,
     Subscribable,
     PromClient,
-    Notifier,
-    TransactionType,
-    TransactionData, ValidatorImOnlineParameters
+    ValidatorImOnlineParameters
 } from './types';
-import { ZeroBalance, ZeroBN } from './constants';
-import { asyncForEach } from './async';
-
-interface InitializedMap {
-    [name: string]: boolean;
-}
-
-interface FreeBalance {
-    [name: string]: Balance;
-}
+import { ZeroBN } from './constants';
 
 export class Subscriber {
     private api: ApiPromise;
     private endpoint: string;
-    private networkId: string;
     private subscribe: SubscriberConfig;
     private validators: Array<Subscribable>;
-    private _initializedTransactions: InitializedMap;
     private currentEraIndex: number;
     private validatorActiveSet: Vec<ValidatorId>;
     private sessionIndex: SessionIndex;
@@ -38,33 +25,20 @@ export class Subscriber {
     constructor(
         cfg: InputConfig,
         private readonly promClient: PromClient,
-        private readonly notifier: Notifier,
         private readonly logger: Logger) {
 
         this.endpoint = cfg.endpoint;
-        this.networkId = cfg.networkId
         this.subscribe = cfg.subscribe
         this.validators = cfg.validators
 
-        this._initializedTransactions = {};
-        if(this.subscribe.transactions){
-            for (const subscription of this.subscribe.transactions) {
-                this._initializedTransactions[subscription.name] = false;
-            }
-        }
     }
 
     public async start(): Promise<void> {
         await this._initAPI();
         await this._initInstanceVariables();
 
-        this.subscribe.transactions && await this._subscribeTransactions();
         await this._handleNewHeadSubscriptions();
         await this._subscribeEvents();
-    }
-
-    get isInitialized(): InitializedMap {
-        return this._initializedTransactions;
     }
 
     private async _initAPI(): Promise<void> {
@@ -87,49 +61,6 @@ export class Subscriber {
       this.validatorActiveSet = await this.api.query.session.validators();
     }
 
-    private async _subscribeTransactions(): Promise<void> {
-        const freeBalance: FreeBalance = {};
-        await asyncForEach(this.subscribe.transactions, async (account) => {
-            const { data: { free: previousFree } } = await this.api.query.system.account(account.address);
-            freeBalance[account.address] = previousFree;
-            await this.api.query.system.account(account.address, async (acc) => {
-                const nonce = acc.nonce;
-                this.logger.info(`The nonce for ${account.name} is ${nonce}`);
-                const currentFree = acc.data.free;
-
-                if (this._initializedTransactions[account.name]) {
-                    const data: TransactionData = {
-                        name: account.name,
-                        address: account.address,
-                        networkId: this.networkId
-                    };
-
-                    // check if the action was performed by the account or externally
-                    const change = currentFree.sub(freeBalance[account.address]);
-                    if (!change.gt(ZeroBalance)) {
-                        this.logger.info(`Action performed from account ${account.name}`);
-
-                        data.txType = TransactionType.Sent;
-                    } else {
-                        this.logger.info(`Transfer received in account ${account.name}`);
-
-                        data.txType = TransactionType.Received;
-                    }
-
-                    freeBalance[account.address] = currentFree;
-
-                    try {
-                        await this.notifier.newTransaction(data);
-                    } catch (e) {
-                        this.logger.error(`could not notify transaction: ${e.message}`);
-                    }
-                } else {
-                    this._initializedTransactions[account.name] = true;
-                }
-            });
-        });
-    }
-
     private async _handleNewHeadSubscriptions(): Promise<void> {
       this.subscribe.producers && this._initProducerHandler();
       if (this.subscribe.offline) {
@@ -147,7 +78,7 @@ export class Subscriber {
       this.validators.forEach((account) => {
         // always increase metric even the first time, so that we initialize the time serie
         // https://github.com/prometheus/prometheus/issues/1673
-        this.promClient.increaseTotalBlocksProduced(account.name, account.address)
+        this.promClient.initTotalBlocksProduced(account.name, account.address)
       });
     }
 
