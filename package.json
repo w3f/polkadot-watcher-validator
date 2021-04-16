@@ -1,6 +1,6 @@
 {
   "name": "polkadot-watcher",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Monitor events on Polkadot networks",
   "repository": "git@github.com:w3f/polkadot-watcher.git",
   "author": "W3F Infrastructure Team <devops@web3.foundation>",
@@ -20,10 +20,9 @@
     "start": "node ./dist/index.js start"
   },
   "dependencies": {
-    "@polkadot/api": "3.11.1",
-    "@polkadot/types": "3.11.1",
+    "@polkadot/api": "^4.5.1",
     "@w3f/config": "^0.1.1",
-    "@w3f/logger": "^0.4.0",
+    "@w3f/logger": "^0.4.2",
     "commander": "^4.0.0",
     "express": "^4.17.1",
     "got": "^10.3.0",
@@ -40,8 +39,8 @@
     "@types/tmp": "^0.2.0",
     "@typescript-eslint/eslint-plugin": "^2.25.0",
     "@typescript-eslint/parser": "^2.25.0",
-    "@w3f/polkadot-api-client": "^1.0.3",
-    "@w3f/test-utils": "^1.0.3",
+    "@w3f/polkadot-api-client": "^1.1.2",
+    "@w3f/test-utils": "^1.1.3",
     "chai": "^4.2.0",
     "eslint": "^6.6.0",
     "fs-extra": "^9.0.0",
