@@ -101,6 +101,12 @@ workflows:
               only: /.*/
           requires:
             - unitTest
+      - testPrometheusRules:
+          filters:
+            tags:
+              only: /.*/
+          requires:
+            - helmLint      
       - integrationTests:
           filters:
             tags:
@@ -108,12 +114,7 @@ workflows:
           requires:
             - helmLint
             - unitTest
-      - testPrometheusRules:
-          filters:
-            tags:
-              only: /.*/
-          requires:
-            - helmLint
+            - testPrometheusRules
       - publishImage:
           context: dockerhub-bot
           filters:
@@ -124,7 +125,6 @@ workflows:
           requires:
             - buildImage
             - integrationTests
-            - testPrometheusRules
       - publishChart:
           context: github-bot
           filters:
@@ -135,4 +135,3 @@ workflows:
           requires:
             - buildImage
             - integrationTests
-            - testPrometheusRules
