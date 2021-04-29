@@ -11,19 +11,19 @@ spec:
     rules:
     - alert: ProducerStallShort
       annotations:
-        message: 'Blocks were not produced for 9:45 hours by {{`{{ $labels.name }}`}}'
+        message: 'Blocks were not produced for 1 hour by {{`{{ $labels.name }}`}}'
         runbook_url: "https://github.com/w3f/infrastructure/wiki/Producer-Stall"
-      expr: increase(polkadot_blocks_produced_total[10m]) == 0
-      for: 567m
+      expr: increase(polkadot_blocks_produced_total[10m]) == 0 and polkadot_validator_out_of_active_set_reports_state == 0
+      for: 60m
       labels:
         severity: warning
         origin: {{ .Values.origin }}
     - alert: ProducerStallLong
       annotations:
-        message: 'Blocks were not produced for 10:59 hours by {{`{{ $labels.name }}`}}'
+        message: 'Blocks were not produced for 3 hours by {{`{{ $labels.name }}`}}'
         runbook_url: "https://github.com/w3f/infrastructure/wiki/Producer-Stall"
-      expr: increase(polkadot_blocks_produced_total[10m]) == 0
-      for: 659m
+      expr: increase(polkadot_blocks_produced_total[10m]) == 0 and polkadot_validator_out_of_active_set_reports_state == 0
+      for: 180m
       labels:
         severity: critical
         origin: {{ .Values.origin }}
@@ -62,11 +62,11 @@ spec:
         origin: {{ .Values.origin }} 
     - alert: ValidatorOutOfActiveSet
       annotations:
-        message: 'Target {{`{{ $labels.name }}`}} is not present in the current validation active set'
+        message: 'Target {{`{{ $labels.name }}`}} is not present in the current validation active set because it has not been selected by Phragmen'
       expr: polkadot_validator_out_of_active_set_reports_state > 0
       for: 2m
       labels:
-        severity: critical
+        severity: info
         origin: {{ .Values.origin }}  
             
 {{ end }}

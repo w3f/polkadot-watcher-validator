@@ -12,6 +12,7 @@ import {
     ValidatorImOnlineParameters
 } from './types';
 import { ZeroBN } from './constants';
+import { isNewSessionEvent, isOfflineEvent } from './utils';
 
 export class Subscriber {
     private api: ApiPromise;
@@ -123,7 +124,7 @@ export class Subscriber {
         const validatorActiveSetIndex = parameters.validatorActiveSet.indexOf(account.address)
         if ( validatorActiveSetIndex < 0 ) {
           this._handleValidatorOutOfActiveSetTrue(account)
-          this.logger.debug(`Target ${account.name} is not presente in the validation active set of era ${parameters.eraIndex}`);
+          this.logger.debug(`Target ${account.name} is not present in the validation active set of era ${parameters.eraIndex}`);
           return 
         }
         else{
@@ -175,11 +176,11 @@ export class Subscriber {
             events.forEach(async (record) => {
                 const { event } = record;
 
-                if (this.subscribe.offline && this._isOfflineEvent(event)) {
+                if (this.subscribe.offline && isOfflineEvent(event)) {
                     this._offlineEventHandler(event)
                 }
 
-                if (this._isNewSessionEvent(event)){
+                if (isNewSessionEvent(event)){
                   await this._newSessionEventHandler()
                 }
             });
@@ -192,10 +193,6 @@ export class Subscriber {
         // https://github.com/prometheus/prometheus/issues/1673
         this.promClient.resetTotalValidatorOfflineReports(account.name);
       });
-    }
-
-    private _isOfflineEvent(event: Event): boolean {
-        return event.section == 'imOnline' && event.method == 'SomeOffline';
     }
 
     private _offlineEventHandler(event: Event): void {
@@ -229,10 +226,6 @@ export class Subscriber {
     private async _newEraHandler(newEraIndex: number): Promise<void>{
       this.currentEraIndex = newEraIndex;
       this.validatorActiveSet = await this.api.query.session.validators();
-    }
-
-    private _isNewSessionEvent(event: Event): boolean {
-      return event.section == 'session' && event.method == 'NewSession';
     }
 
     private async _getHeartbeatBlockThreshold(): Promise<BlockNumber> {
