@@ -46,9 +46,9 @@ tests:
             alertname: ValidatorOutOfActiveSet
             exp_alerts:
               - exp_labels:
-                  severity: critical
+                  severity: info
                   origin: cluster
                   name: node0
                 exp_annotations:
-                    message: "Target node0 is not present in the current validation active set" 
+                    message: "Target node0 is not present in the current validation active set because it has not been selected by Phragmen" 
                            
