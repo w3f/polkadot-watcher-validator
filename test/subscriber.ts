@@ -16,11 +16,7 @@ const cfg = {
     validators: [{
         name: 'Alice',
         address: 'GsvVmjr1CBHwQHw84pPHMDxgNY3iBLz6Qn7qS3CH8qPhrHz'
-    }],
-    subscribe: {
-        producers: true,
-        offline: true
-    }
+    }]
 };
 
 const cfg2 = {
@@ -30,11 +26,7 @@ const cfg2 = {
   validators: [{
       name: 'NotActiveAccount',
       address: 'FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP'
-  }],
-  subscribe: {
-      producers: true,
-      offline: true
-  }
+  }]
 };
 
 function delay(ms: number): Promise<void> {

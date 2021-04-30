@@ -19,7 +19,6 @@ export interface InputConfig {
     logLevel: string;
     port: number;
     endpoint: string;
-    subscribe: SubscriberConfig;
     validators: Array<Subscribable>;
 }
 

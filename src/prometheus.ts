@@ -38,8 +38,9 @@ export class Prometheus implements PromClient {
 
     initTotalBlocksProduced(name: string, account: string): void {
       this.totalBlocksProduced.inc({ name, account },0)
-  }
+    }
 
+    /* condition where you have been reported offline */
     increaseTotalValidatorOfflineReports(name: string): void {
         this.totalValidatorOfflineReports.inc({ name });
     }
@@ -48,6 +49,7 @@ export class Prometheus implements PromClient {
         this.totalValidatorOfflineReports.set({ name }, 0);
     }
 
+    /* condition where you are risking to be reported as offline */
     setStatusValidatorOffline(name: string): void {
         this.stateValidatorOfflineSessionReports.set({ name }, 1);        
     }

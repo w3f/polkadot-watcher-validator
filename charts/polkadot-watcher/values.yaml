@@ -3,16 +3,13 @@ port: 3000
 
 image:
   repo: web3f/polkadot-watcher
-  tag: v2.1.0
+  tag: v3.0.0
 
 config:
   endpoint: "wss://kusama-rpc.polkadot.io"
   port: 3000
   logLevel: info
   validators: []
-  subscribe:
-    producers: true
-    offline: true
 
 serviceMonitor:
   labels:
