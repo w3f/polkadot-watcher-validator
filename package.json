@@ -27,7 +27,7 @@
     "express": "^4.17.1",
     "got": "^10.3.0",
     "prom-client": "^11.5.3",
-    "ws": "6.1.2"
+    "ws": "7.4.6"
   },
   "devDependencies": {
     "@types/chai": "^4.2.9",
