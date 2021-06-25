@@ -40,6 +40,15 @@ export class Subscriber {
 
     private async _initAPI(): Promise<void> {
         const provider = new WsProvider(this.endpoint);
+        provider.on('error', error => {
+          if(this.api == undefined) {
+            this.logger.error(JSON.stringify("initAPI error:"+JSON.stringify(error)))
+            process.exit(1)
+          }
+          else{
+            this.logger.error(JSON.stringify("API error:"+JSON.stringify(error)))
+          }
+        })
         this.api = await ApiPromise.create({ provider });
 
         const [chain, nodeName, nodeVersion] = await Promise.all([
