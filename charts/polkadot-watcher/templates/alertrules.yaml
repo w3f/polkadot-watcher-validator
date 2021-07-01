@@ -44,6 +44,7 @@ spec:
       labels:
         severity: warning
         origin: {{ .Values.origin }}
+    {{ if ne .Values.prometheusRules.heartbeat false }}
     - alert: ValidatorOfflineSessionLong
       annotations:
         message: 'Target {{`{{ $labels.name }}`}} has either not authored any block or sent any heartbeat yet in this session'
@@ -60,6 +61,7 @@ spec:
       labels:
         severity: warning
         origin: {{ .Values.origin }} 
+    {{ end }}    
     - alert: ValidatorOutOfActiveSet
       annotations:
         message: 'Target {{`{{ $labels.name }}`}} is not present in the current validation active set because it has not been selected by Phragmen'
