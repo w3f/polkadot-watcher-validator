@@ -3,7 +3,7 @@ port: 3000
 
 image:
   repo: web3f/polkadot-watcher
-  tag: v3.0.3
+  tag: v3.0.4
 
 config:
   endpoint: "wss://kusama-rpc.polkadot.io"
@@ -19,6 +19,7 @@ serviceMonitor:
 prometheusRules:
   labels:
     app: w3f
+  heartbeat: true  
 
 networkId: kusama
 
