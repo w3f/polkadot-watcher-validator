@@ -36,14 +36,6 @@ spec:
       labels:
         severity: critical
         origin: {{ .Values.origin }}
-    - alert: WatcherLogErrors
-      annotations:
-        message: 'Polkadot Watcher is showing errors in the log, please check'
-      expr: increase(polkadot_watcher_log_errors_total[2m]) > 0
-      for: 30s
-      labels:
-        severity: warning
-        origin: {{ .Values.origin }}
     {{ if ne .Values.prometheusRules.heartbeat false }}
     - alert: ValidatorOfflineSessionLong
       annotations:
