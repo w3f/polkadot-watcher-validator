@@ -1,8 +1,5 @@
-node_modules/
-dist/
-charts/
-helmfile.d/
-.circleci/
-config/
-scripts/
-test/
+*
+!src
+!package.json
+!tsconfig.json
+!yarn.lock

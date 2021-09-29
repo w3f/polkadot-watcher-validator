@@ -12,9 +12,18 @@ jobs:
       - run: yarn
       - run: yarn test
 
+
+  yarnLint:
+    docker:
+      - image: web3f/node-dind:v1.0.0
+    steps:
+      - checkout
+      - run: yarn
+      - run: yarn lint    
+
   helmLint:
     docker:
-      - image: web3f/ci-commons:v2.4.4
+      - image: web3f/ci-commons:v2.4.6
     steps:
       - checkout
       - run:
@@ -23,19 +32,19 @@ jobs:
 
   buildImage:
     docker:
-      - image: web3f/ci-commons:v2.4.4
+      - image: web3f/ci-commons:v2.4.6
     steps:
       - checkout
       - setup_remote_docker:
           docker_layer_caching: true
-          version: 19.03.13
+          version: 20.10.7
       - run:
           command: |
             /scripts/build-image.sh web3f/polkadot-watcher .
 
   integrationTests:
     docker:
-      - image: web3f/ci-commons:v2.4.4
+      - image: web3f/ci-commons:v2.4.6
     steps:
       - checkout
       - setup_remote_docker
@@ -46,17 +55,17 @@ jobs:
 
   testPrometheusRules:
     docker:
-      - image: web3f/ci-commons:v2.4.4
+      - image: web3f/ci-commons:v2.4.6
     steps:
       - checkout
       - run:
           name: Install missing dependencies
           command: |
-            YQ_VER=3.3.0
+            YQ_VER=3.4.1
             wget -O /usr/local/bin/yq https://github.com/mikefarah/yq/releases/download/${YQ_VER}/yq_linux_amd64
             chmod +x /usr/local/bin/yq
 
-            PROM_VER=2.18.1
+            PROM_VER=2.30.1
             wget -O /tmp/prometheus.tgz https://github.com/prometheus/prometheus/releases/download/v${PROM_VER}/prometheus-${PROM_VER}.linux-amd64.tar.gz
             tar -xvf /tmp/prometheus.tgz prometheus-${PROM_VER}.linux-amd64/promtool -C /tmp
             mv /tmp/prometheus-$PROM_VER.linux-amd64/promtool /usr/local/bin/
@@ -67,7 +76,7 @@ jobs:
 
   publishImage:
     docker:
-      - image: web3f/ci-commons:v2.4.4
+      - image: web3f/ci-commons:v2.4.6
     steps:
       - checkout
       - setup_remote_docker
@@ -77,7 +86,7 @@ jobs:
 
   publishChart:
     docker:
-      - image: web3f/ci-commons:v2.4.4
+      - image: web3f/ci-commons:v2.4.6
     steps:
       - checkout
       - run:
@@ -87,15 +96,29 @@ jobs:
 workflows:
   version: 2
   test_and_deploy:
-    jobs:
-      - unitTest:
-          filters:
-            tags:
-              only: /.*/
+    jobs:    
       - helmLint:
           filters:
             tags:
               only: /.*/
+      - yarnLint:
+          filters:
+            tags:
+              only: /.*/    
+      - unitTest:
+          filters:
+            tags:
+              only: /.*/
+          requires:
+            - helmLint
+            - yarnLint             
+      - testPrometheusRules:
+          filters:
+            tags:
+              only: /.*/
+          requires:
+            - helmLint
+            - yarnLint         
       - buildImage:
           context: dockerhub-bot
           filters:
@@ -103,20 +126,13 @@ workflows:
               only: /.*/
           requires:
             - unitTest
-      - testPrometheusRules:
-          filters:
-            tags:
-              only: /.*/
-          requires:
-            - helmLint      
+            - testPrometheusRules
       - integrationTests:
           filters:
             tags:
               only: /.*/
           requires:
-            - helmLint
-            - unitTest
-            - testPrometheusRules
+            - buildImage
       - publishImage:
           context: dockerhub-bot
           filters:
@@ -125,7 +141,6 @@ workflows:
             tags:
               only: /^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/
           requires:
-            - buildImage
             - integrationTests
       - publishChart:
           context: github-bot
@@ -135,5 +150,4 @@ workflows:
             tags:
               only: /^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/
           requires:
-            - buildImage
             - integrationTests
