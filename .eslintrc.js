@@ -11,5 +11,8 @@ module.exports = {
   ],
   "rules": {
     "@typescript-eslint/camelcase": ["error", { "properties": "never" } ]
-  }
+  },
+  env: {
+    node: true,
+  },
 };
