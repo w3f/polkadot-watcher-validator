@@ -51,7 +51,7 @@ jobs:
       - run:
           description: run integration tests
           command: |
-            /scripts/integration-tests.sh
+            /scripts/integration-tests.sh kindest/node:v1.19.11
 
   testPrometheusRules:
     docker:
