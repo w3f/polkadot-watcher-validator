@@ -43,6 +43,8 @@ export class Subscriber {
 
         await this._handleNewHeadSubscriptions();
         await this._subscribeEvents();
+
+        this._initMetricsLivenessTest();
     }
 
     private async _initAPI(): Promise<void> {
@@ -232,6 +234,12 @@ export class Subscriber {
         // https://github.com/prometheus/prometheus/issues/1673
         this.promClient.resetStatusValidatorOffline(account.name);
       });
+    }
+
+    private _initMetricsLivenessTest(): void {
+      const testAccountName = "LIVENESS_TEST_NO_ACTION_REQUIRED"
+      this.promClient.increaseTotalValidatorOfflineReports(testAccountName,testAccountName);
+      setTimeout(()=>{this.promClient.resetTotalValidatorOfflineReports(testAccountName);},60000)
     }
 
     private _initOutOfActiveSetMetrics(): void {
