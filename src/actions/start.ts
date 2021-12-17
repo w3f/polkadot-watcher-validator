@@ -5,6 +5,7 @@ import { Config } from '@w3f/config';
 import { Subscriber } from '../subscriber';
 import { Prometheus } from '../prometheus';
 import { InputConfig } from '../types';
+import { Client } from '../client';
 
 const _addTestEndpoint = (server: express.Application, subscriber: Subscriber): void =>{
  
@@ -27,11 +28,15 @@ export async function startAction(cmd): Promise<void> {
 
     const logger = createLogger(cfg.logLevel);
 
-    const promClient = new Prometheus(logger);
+    const api = await new Client(cfg,logger).connect()
+    const chain = await api.rpc.system.chain()
+    const networkId = chain.toString().toLowerCase()
+
+    const promClient = new Prometheus(networkId,logger);
     promClient.injectMetricsRoute(server);
     promClient.startCollection();
 
-    const subscriber = new Subscriber(cfg, promClient, logger);
+    const subscriber = new Subscriber(cfg, api, promClient, logger);
     await subscriber.start();
 
     _addTestEndpoint(server,subscriber)

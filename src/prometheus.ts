@@ -14,7 +14,7 @@ export class Prometheus implements PromClient {
     private stateValidatorOfflineSessionReports: promClient.Gauge;
     private stateValidatorOutOfActiveSetReports: promClient.Gauge;
 
-    constructor(private readonly logger: Logger) {
+    constructor(private readonly network: string, private readonly logger: Logger) {
         this._initMetrics()
     }
 
@@ -32,64 +32,64 @@ export class Prometheus implements PromClient {
         })
     }
 
-    increaseTotalBlocksProduced(name: string, account: string): void {
-        this.totalBlocksProduced.inc({ name, account })
+    increaseTotalBlocksProduced(name: string, address: string): void {
+        this.totalBlocksProduced.inc({network:this.network, name, address })
     }
 
-    initTotalBlocksProduced(name: string, account: string): void {
-      this.totalBlocksProduced.inc({ name, account },0)
+    initTotalBlocksProduced(name: string, address: string): void {
+      this.totalBlocksProduced.inc({network:this.network, name, address },0)
     }
 
     /* condition where you have been reported offline */
-    increaseTotalValidatorOfflineReports(name: string): void {
-        this.totalValidatorOfflineReports.inc({ name });
+    increaseTotalValidatorOfflineReports(name: string, address: string): void {
+        this.totalValidatorOfflineReports.inc({network:this.network, name, address });
     }
 
-    resetTotalValidatorOfflineReports(name: string): void {
-        this.totalValidatorOfflineReports.set({ name }, 0);
+    resetTotalValidatorOfflineReports(name: string, address: string): void {
+        this.totalValidatorOfflineReports.set({network:this.network, name, address }, 0);
     }
 
     /* condition where you are risking to be reported as offline */
     setStatusValidatorOffline(name: string): void {
-        this.stateValidatorOfflineSessionReports.set({ name }, 1);        
+        this.stateValidatorOfflineSessionReports.set({network:this.network, name }, 1);        
     }
 
     resetStatusValidatorOffline(name: string): void {
-        this.stateValidatorOfflineSessionReports.set({ name }, 0);
+        this.stateValidatorOfflineSessionReports.set({network:this.network, name }, 0);
     }
 
     isValidatorStatusOffline(name: string): boolean {
-      return promClient.register.getSingleMetric(Prometheus.nameValidatorOfflineSessionMetric)['hashMap']['name:'+name]['value'] === 1
+      return promClient.register.getSingleMetric(Prometheus.nameValidatorOfflineSessionMetric)['hashMap'][`name:${name},network:${this.network}`]['value'] === 1
     }
 
     setStatusValidatorOutOfActiveSet(name: string): void{
-      this.stateValidatorOutOfActiveSetReports.set({ name }, 1);        
+      this.stateValidatorOutOfActiveSetReports.set({network:this.network, name }, 1);        
     }
 
     resetStatusValidatorOutOfActiveSet(name: string): void{
-      this.stateValidatorOutOfActiveSetReports.set({ name }, 0);        
+      this.stateValidatorOutOfActiveSetReports.set({network:this.network, name }, 0);        
     }
 
     _initMetrics(): void {
         this.totalBlocksProduced = new promClient.Counter({
             name: 'polkadot_blocks_produced_total',
             help: 'Total number of blocks produced by a validator',
-            labelNames: ['name', 'account']
+            labelNames: ['network', 'name', 'address']
         });
         this.totalValidatorOfflineReports = new promClient.Gauge({
             name: 'polkadot_offline_validator_reports_total',
             help: 'Total times a validator has been reported offline',
-            labelNames: ['name']
+            labelNames: ['network', 'name', 'address']
         });
         this.stateValidatorOfflineSessionReports = new promClient.Gauge({
             name: Prometheus.nameValidatorOfflineSessionMetric,
             help: 'Whether a validator is reported as offline in the current session',
-            labelNames: ['name']
+            labelNames: ['network', 'name']
         });
         this.stateValidatorOutOfActiveSetReports = new promClient.Gauge({
           name: 'polkadot_validator_out_of_active_set_reports_state',
           help: 'Whether a validator is reported as outside of the current Era validators active set',
-          labelNames: ['name']
+          labelNames: ['network', 'name']
       });
     }
 }

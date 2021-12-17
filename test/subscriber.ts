@@ -3,6 +3,7 @@ import { createLogger } from '@w3f/logger';
 import { should } from 'chai';
 
 import { Subscriber } from '../src/subscriber';
+import { Client } from '../src/client';
 import {
     PrometheusMock
 } from './mocks';
@@ -33,16 +34,16 @@ function delay(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-describe('Subscriber cfg1', () => {
+describe('Subscriber cfg1, with a started network', () => {
     const testRPC = new TestPolkadotRPC();
-    const pc = new PrometheusMock();
-    let subject: Subscriber;
+    const prometheus = new PrometheusMock();
     const logger = createLogger();
+    let subject: Subscriber;
     before(async () => {
         await testRPC.start();
-
-        cfg.endpoint = testRPC.endpoint();
-        subject = new Subscriber(cfg, pc, logger);
+        cfg.endpoint = testRPC.endpoint()
+        const api = await new Client(cfg,logger).connect()
+        subject = new Subscriber(cfg, api, prometheus, logger);
     });
 
     after(async () => {
@@ -58,25 +59,25 @@ describe('Subscriber cfg1', () => {
             it('should record produced blocks...', async () => {
                 await delay(6000);
 
-                pc.totalBlocksProduced.should.be.gt(0);
-                pc.totalValidatorOfflineReports.should.be.eq(0)
-                pc.statusValidatorOffline.should.be.eq(0)
-                pc.statusValidatorOutOfActiveSet.should.be.eq(0)
+                prometheus.totalBlocksProduced.should.be.gt(0);
+                prometheus.totalValidatorOfflineReports.should.be.eq(0)
+                prometheus.statusValidatorOffline.should.be.eq(0)
+                prometheus.statusValidatorOutOfActiveSet.should.be.eq(0)
             });
         });
     });
 });
 
-describe('Subscriber cfg2', () => {
+describe('Subscriber cfg2, with a started network', () => {
   const testRPC = new TestPolkadotRPC();
-  const pc = new PrometheusMock();
-  let subject: Subscriber;
+  const prometheus = new PrometheusMock();
   const logger = createLogger();
+  let subject: Subscriber;
   before(async () => {
       await testRPC.start();
-
-      cfg2.endpoint = testRPC.endpoint();
-      subject = new Subscriber(cfg2, pc, logger);
+      cfg2.endpoint = testRPC.endpoint()
+      const api = await new Client(cfg2,logger).connect()
+      subject = new Subscriber(cfg2, api, prometheus, logger);
   });
 
   after(async () => {
@@ -92,10 +93,10 @@ describe('Subscriber cfg2', () => {
           it('should NOT record blocks produced...', async () => {
               await delay(6000);
 
-              pc.totalBlocksProduced.should.be.eq(0);
-              pc.totalValidatorOfflineReports.should.be.eq(0)
-              pc.statusValidatorOffline.should.be.eq(0)
-              pc.statusValidatorOutOfActiveSet.should.be.eq(1)
+              prometheus.totalBlocksProduced.should.be.eq(0);
+              prometheus.totalValidatorOfflineReports.should.be.eq(0)
+              prometheus.statusValidatorOffline.should.be.eq(0)
+              prometheus.statusValidatorOutOfActiveSet.should.be.eq(1)
           });
       });
   });

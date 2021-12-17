@@ -1,4 +1,4 @@
-{{ if ne .Values.environment "ci" }}
+{{ if and .Values.prometheusRules.enabled ( ne .Values.environment "ci" ) }}
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
@@ -17,7 +17,7 @@ spec:
       for: 60m
       labels:
         severity: warning
-        origin: {{ .Values.origin }}
+        origin: {{ .Values.prometheusRules.origin }}
     - alert: ProducerStallLong
       annotations:
         message: 'Blocks were not produced for 3 hours by {{`{{ $labels.name }}`}}'
@@ -26,16 +26,16 @@ spec:
       for: 180m
       labels:
         severity: critical
-        origin: {{ .Values.origin }}
+        origin: {{ .Values.prometheusRules.origin }}
     - alert: ValidatorOffline
       annotations:
-        message: '{{`{{ $labels.name }}`}} was reported offline, check https://polkascan.io/pre/{{ .Values.networkId }}/event?module=imonline&event=SomeOffline&page=1 for details'
+        message: '{{`{{ $labels.name }}`}} was reported offline, check https://{{`{{ $labels.network }}`}}.subscan.io/event?address=&module=imonline&event=someoffline for details. Check his account for eventul slahes: https://{{`{{ $labels.network }}`}}.subscan.io/account/{{`{{ $labels.address }}`}}?tab=reward'
         runbook_url: "https://github.com/w3f/infrastructure/wiki/Validator-Offline"
       expr: polkadot_offline_validator_reports_total > 0
       for: 30s
       labels:
         severity: critical
-        origin: {{ .Values.origin }}
+        origin: {{ .Values.prometheusRules.origin }}
     {{ if ne .Values.prometheusRules.heartbeat false }}
     - alert: ValidatorOfflineSessionLong
       annotations:
@@ -44,7 +44,7 @@ spec:
       for: 10m
       labels:
         severity: critical
-        origin: {{ .Values.origin }}        
+        origin: {{ .Values.prometheusRules.origin }}        
     - alert: ValidatorOfflineSessionShort
       annotations:
         message: 'Target {{`{{ $labels.name }}`}} has either not authored any block or sent any heartbeat yet in this session'
@@ -52,7 +52,7 @@ spec:
       for: 8m
       labels:
         severity: warning
-        origin: {{ .Values.origin }} 
+        origin: {{ .Values.prometheusRules.origin }} 
     {{ end }}    
     - alert: ValidatorOutOfActiveSet
       annotations:
@@ -61,6 +61,6 @@ spec:
       for: 2m
       labels:
         severity: info
-        origin: {{ .Values.origin }}  
+        origin: {{ .Values.prometheusRules.origin }}  
             
 {{ end }}

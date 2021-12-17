@@ -1,4 +1,4 @@
-import { ApiPromise, WsProvider } from '@polkadot/api';
+import { ApiPromise } from '@polkadot/api';
 import { Event } from '@polkadot/types/interfaces/system';
 import { Header, SessionIndex, ValidatorId } from '@polkadot/types/interfaces';
 import { Tuple, Vec } from '@polkadot/types/codec';
@@ -13,8 +13,6 @@ import {
 import { getActiveEraIndex, getHeartbeatBlockThreshold, hasValidatorProvedOnline, isNewSessionEvent, isOfflineEvent } from './utils';
 
 export class Subscriber {
-    private api: ApiPromise;
-    private endpoint: string;
     private validators: Array<Subscribable>;
     private currentEraIndex: number;
     private validatorActiveSet: Vec<ValidatorId>;
@@ -22,22 +20,15 @@ export class Subscriber {
 
     constructor(
         cfg: InputConfig,
+        private readonly api: ApiPromise,
         private readonly promClient: PromClient,
         private readonly logger: Logger) {
 
-        this.endpoint = cfg.endpoint;
         this.validators = cfg.validators
 
     }
 
     public async start(): Promise<void> {
-
-        try {
-          await this._initAPI();
-        } catch (error) {
-          this.logger.error("initAPI error... exiting: "+JSON.stringify(error))
-          process.exit(1)
-        }
         
         await this._initInstanceVariables();
 
@@ -49,31 +40,7 @@ export class Subscriber {
     public triggerConnectivityTest(): void {
       const testAccountName = "CONNECTIVITY_TEST_NO_ACTION_REQUIRED"
       this.promClient.increaseTotalValidatorOfflineReports(testAccountName,testAccountName);
-      setTimeout(()=>{this.promClient.resetTotalValidatorOfflineReports(testAccountName);},120000) //reset after 2 minutes
-    }
-
-    private async _initAPI(): Promise<void> {
-        const provider = new WsProvider(this.endpoint);
-
-        this.api = new ApiPromise({provider})
-        if(this.api){
-          this.api.on("error", error => {
-            if( error.toString().includes("FATAL") || JSON.stringify(error).includes("FATAL") ){
-              this.logger.error("The API had a FATAL error... exiting!")
-              process.exit(1)
-            }
-          })
-        }
-        await this.api.isReadyOrError;
-
-        const [chain, nodeName, nodeVersion] = await Promise.all([
-            this.api.rpc.system.chain(),
-            this.api.rpc.system.name(),
-            this.api.rpc.system.version()
-        ]);
-        this.logger.info(
-            `You are connected to chain ${chain} using ${nodeName} v${nodeVersion}`
-        );
+      setTimeout(()=>{this.promClient.resetTotalValidatorOfflineReports(testAccountName, testAccountName);},120000) //reset after 2 minutes
     }
 
     private async _initInstanceVariables(): Promise<void>{
@@ -131,7 +98,7 @@ export class Subscriber {
 
     private _solveOfflineStatus(account: Subscribable): void{
       this.promClient.resetStatusValidatorOffline(account.name);
-      this.promClient.resetTotalValidatorOfflineReports(account.name);
+      this.promClient.resetTotalValidatorOfflineReports(account.name, account.address);
     }
 
     private async _validatorStatusHandler(header: Header): Promise<void> {
@@ -253,7 +220,7 @@ export class Subscriber {
       this.validators.forEach((account) => {
         // always increase metric even the first time, so that we initialize the time serie
         // https://github.com/prometheus/prometheus/issues/1673
-        this.promClient.resetTotalValidatorOfflineReports(account.name);
+        this.promClient.resetTotalValidatorOfflineReports(account.name, account.address);
       });
     }
 
