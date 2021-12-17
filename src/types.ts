@@ -26,7 +26,7 @@ export interface PromClient {
     increaseTotalBlocksProduced(name: string, address: string): void;
     initTotalBlocksProduced(name: string, address: string): void;
     increaseTotalValidatorOfflineReports(name: string, address: string): void;
-    resetTotalValidatorOfflineReports(name: string): void;
+    resetTotalValidatorOfflineReports(name: string, address: string): void;
     setStatusValidatorOffline(name: string): void;
     resetStatusValidatorOffline(name: string): void;
     isValidatorStatusOffline(name: string): boolean;

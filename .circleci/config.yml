@@ -4,7 +4,7 @@ jobs:
   unitTest:
     docker:
       - image: web3f/node-dind:v1.0.0
-      - image: parity/polkadot:v0.9.12
+      - image: parity/polkadot:v0.9.13
         name: polkadot
         command: --chain=kusama-dev --ws-port 11000 --alice --ws-external --rpc-methods=Unsafe --rpc-cors=all
     steps:
@@ -23,7 +23,7 @@ jobs:
 
   helmLint:
     docker:
-      - image: web3f/ci-commons:v2.4.8
+      - image: web3f/ci-commons:v2.4.11
     steps:
       - checkout
       - run:
@@ -32,7 +32,7 @@ jobs:
 
   buildImage:
     docker:
-      - image: web3f/ci-commons:v2.4.8
+      - image: web3f/ci-commons:v2.4.11
     steps:
       - checkout
       - setup_remote_docker:
@@ -44,7 +44,7 @@ jobs:
 
   integrationTests:
     docker:
-      - image: web3f/ci-commons:v2.4.8
+      - image: web3f/ci-commons:v2.4.11
     steps:
       - checkout
       - setup_remote_docker
@@ -55,17 +55,18 @@ jobs:
 
   testPrometheusRules:
     docker:
-      - image: web3f/ci-commons:v2.4.8
+      - image: web3f/ci-commons:v2.4.11
     steps:
       - checkout
       - run:
           name: Install missing dependencies
           command: |
-            YQ_VER=3.4.1
-            wget -O /usr/local/bin/yq https://github.com/mikefarah/yq/releases/download/${YQ_VER}/yq_linux_amd64
+            YQ_VER=4.16.1
+            wget -O /usr/local/bin/yq https://github.com/mikefarah/yq/releases/download/v${YQ_VER}/yq_linux_amd64
+
             chmod +x /usr/local/bin/yq
 
-            PROM_VER=2.30.1
+            PROM_VER=2.31.1
             wget -O /tmp/prometheus.tgz https://github.com/prometheus/prometheus/releases/download/v${PROM_VER}/prometheus-${PROM_VER}.linux-amd64.tar.gz
             tar -xvf /tmp/prometheus.tgz prometheus-${PROM_VER}.linux-amd64/promtool -C /tmp
             mv /tmp/prometheus-$PROM_VER.linux-amd64/promtool /usr/local/bin/
@@ -76,7 +77,7 @@ jobs:
 
   publishImage:
     docker:
-      - image: web3f/ci-commons:v2.4.8
+      - image: web3f/ci-commons:v2.4.11
     steps:
       - checkout
       - setup_remote_docker
@@ -86,7 +87,7 @@ jobs:
 
   publishChart:
     docker:
-      - image: web3f/ci-commons:v2.4.8
+      - image: web3f/ci-commons:v2.4.11
     steps:
       - checkout
       - run:

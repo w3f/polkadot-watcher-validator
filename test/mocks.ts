@@ -19,7 +19,7 @@ export class PrometheusMock implements PromClient {
     }
     
     increaseTotalValidatorOfflineReports(name: string, address: string): void { }
-    resetTotalValidatorOfflineReports(name: string): void { }
+    resetTotalValidatorOfflineReports(name: string, address: string): void { }
 
     setStatusValidatorOffline(name: string): void {
       this._stateValidatorOffline = 1
