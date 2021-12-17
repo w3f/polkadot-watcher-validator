@@ -62,7 +62,8 @@ jobs:
           name: Install missing dependencies
           command: |
             YQ_VER=4.16.1
-            wget -O /usr/local/bin/yq https://github.com/mikefarah/yq/releases/download/${YQ_VER}/yq_linux_amd64
+            wget -O /usr/local/bin/yq https://github.com/mikefarah/yq/releases/download/v${YQ_VER}/yq_linux_amd64
+
             chmod +x /usr/local/bin/yq
 
             PROM_VER=2.31.1
