@@ -6,6 +6,14 @@ import { Subscriber } from '../subscriber';
 import { Prometheus } from '../prometheus';
 import { InputConfig } from '../types';
 
+const _addTestEndpoint = (server: express.Application, subscriber: Subscriber): void =>{
+ 
+  server.get('/test',
+      async (_req: express.Request, res: express.Response): Promise<void> => {
+          subscriber.triggerLivenessTest()
+          res.status(200).send('A test alert should fire and then resolve...')
+      })
+}
 
 export async function startAction(cmd): Promise<void> {
     const cfg = new Config<InputConfig>().parse(cmd.config);
@@ -25,4 +33,6 @@ export async function startAction(cmd): Promise<void> {
 
     const subscriber = new Subscriber(cfg, promClient, logger);
     await subscriber.start();
+
+    _addTestEndpoint(server,subscriber)
 }
