@@ -24,8 +24,6 @@ prometheusRules:
   origin: cluster  
   heartbeat: true  
 
-networkId: kusama
-
 resources:
   requests:
     cpu: "100m"
