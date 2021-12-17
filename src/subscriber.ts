@@ -46,8 +46,8 @@ export class Subscriber {
 
     }
 
-    public triggerLivenessTest(): void {
-      const testAccountName = "LIVENESS_TEST_NO_ACTION_REQUIRED"
+    public triggerConnectivityTest(): void {
+      const testAccountName = "CONNECTIVITY_TEST_NO_ACTION_REQUIRED"
       this.promClient.increaseTotalValidatorOfflineReports(testAccountName,testAccountName);
       setTimeout(()=>{this.promClient.resetTotalValidatorOfflineReports(testAccountName);},120000) //reset after 2 minutes
     }

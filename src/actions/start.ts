@@ -10,7 +10,7 @@ const _addTestEndpoint = (server: express.Application, subscriber: Subscriber): 
  
   server.get('/test',
       async (_req: express.Request, res: express.Response): Promise<void> => {
-          subscriber.triggerLivenessTest()
+          subscriber.triggerConnectivityTest()
           res.status(200).send('A test alert should fire and then resolve...')
       })
 }
