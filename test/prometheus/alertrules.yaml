@@ -9,7 +9,9 @@ tests:
           - series: 'polkadot_offline_validator_session_reports_state{name="node0"}'
             values: '0 0 1+0x10 0 0' # 0 0 1 1 1 1 1 1 1 1 1 1 1 0 0
           - series: 'polkadot_validator_out_of_active_set_reports_state{name="node0"}'
-            values: '0 0 1 1 1 0 0'         
+            values: '0 0 1 1 1 0 0'       
+          - series: 'polkadot_validator_payee_state{name="node0"}'
+            values: '0 0 1 1 1 0 0'     
 
       alert_rule_test:
           # Test ValidatorOfflineSession alert
@@ -51,4 +53,21 @@ tests:
                   name: node0
                 exp_annotations:
                     message: "Target node0 is not present in the current validation active set because it has not been selected by Phragmen" 
+
+            # Test ValidatorRewardDestinationChanged alert
+          - eval_time: 3m # Values: 0 0 1 1 
+            alertname: ValidatorRewardDestinationChanged
+            exp_alerts:
+          - eval_time: 4m # Values: 0 0 1 1 1
+            alertname: ValidatorRewardDestinationChanged
+            exp_alerts:
+              - exp_labels:
+                  severity: info
+                  origin: cluster
+                  name: node0
+                exp_annotations:
+                    message: "Target node0 has changed his reward destination"
+          - eval_time: 5m # Values: 0 0 1 1 1 0
+            alertname: ValidatorRewardDestinationChanged
+            exp_alerts:                 
                            

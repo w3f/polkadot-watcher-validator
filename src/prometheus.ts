@@ -3,6 +3,7 @@ import { register } from 'prom-client';
 import * as promClient from 'prom-client';
 import { Logger } from '@w3f/logger';
 import { PromClient } from './types';
+import { payeeMetricAutoresolveMillis } from './constants';
 
 
 export class Prometheus implements PromClient {
@@ -13,7 +14,9 @@ export class Prometheus implements PromClient {
     private totalValidatorOfflineReports: promClient.Gauge;
     private stateValidatorOfflineSessionReports: promClient.Gauge;
     private stateValidatorOutOfActiveSetReports: promClient.Gauge;
+    
     private stateValidatorPayeeReports: promClient.Gauge;
+    private payeeTimeouts = new Map<string,NodeJS.Timeout>()
 
     constructor(private readonly network: string, private readonly logger: Logger) {
         this._initMetrics()
@@ -72,8 +75,15 @@ export class Prometheus implements PromClient {
     }
 
     setStatusValidatorPayeeChanged(name: string): void{
+      if(this.payeeTimeouts.has(name)){
+        clearTimeout(this.payeeTimeouts.get(name))
+        this.payeeTimeouts.delete(name)
+      }
+
       this.stateValidatorPayeeReports.set({network:this.network, name }, 1);
-      setTimeout(()=>this.resetStatusValidatorPayeeChanged(name),1200000)//the metric autoresolves after 20 minutes
+      
+      const timeoutID = setTimeout(()=>this.resetStatusValidatorPayeeChanged(name),payeeMetricAutoresolveMillis)
+      this.payeeTimeouts[name] = timeoutID
     }
 
     resetStatusValidatorPayeeChanged(name: string): void{
