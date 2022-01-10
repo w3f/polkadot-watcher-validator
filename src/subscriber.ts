@@ -17,6 +17,7 @@ export class Subscriber {
     private currentEraIndex: number;
     private validatorActiveSet: Vec<ValidatorId>;
     private sessionIndex: SessionIndex;
+    private tobeScannedBlock: number;
 
     constructor(
         cfg: InputConfig,
@@ -34,7 +35,7 @@ export class Subscriber {
 
         await this._handleNewHeadSubscriptions();
         await this._subscribeEvents();
-
+        this._scheduleScanner()
     }
 
     public triggerConnectivityTest(): void {
@@ -47,6 +48,14 @@ export class Subscriber {
       this.sessionIndex = await this.api.query.session.currentIndex();
       this.currentEraIndex = await getActiveEraIndex(this.api);
       this.validatorActiveSet = await this.api.query.session.validators();
+      await this._initValidatorsControllers()
+    }
+
+    private async _initValidatorsControllers(): Promise<void>{
+      for (const validator of this.validators) {
+        const controller = await this.api.query.staking.bonded(validator.address)
+        validator.controllerAddress = controller.unwrap().toString()
+      }
     }
 
     private async _handleNewHeadSubscriptions(): Promise<void> {
@@ -58,6 +67,43 @@ export class Subscriber {
         this._producerHandler(header);
         this._validatorStatusHandler(header);
       })
+    }
+
+    private _scheduleScanner(): void {
+      this._initPayeeMetrics()
+      this._triggerPayeeScan()
+      setInterval(()=>this._triggerPayeeScan(),1800000)//30 minutes = 60000 * 30
+    }
+
+    // triggered at startup and at the beginning of each new era
+    private async _triggerPayeeScan(): Promise<void> {
+
+      //if(!this.currentScanBlockNumber) this.currentScanBlockNumber = await firstBlockCurrentEra(this.api)
+      if(!this.tobeScannedBlock) this.tobeScannedBlock = 1017530  //TODO change the hardcoded number, testing
+      const currentBlock = await this.api.derive.chain.bestNumber()
+      this.logger.info(`****** | Scanner | From Block ${this.tobeScannedBlock} | To Block ${currentBlock.toNumber()} | ******`)
+
+      for (this.tobeScannedBlock; this.tobeScannedBlock <= currentBlock.toNumber(); this.tobeScannedBlock++ ){
+
+        const blockHash = await this.api.rpc.chain.getBlockHash(this.tobeScannedBlock)
+        const block = await this.api.rpc.chain.getBlock(blockHash)
+
+        block.block.extrinsics.forEach( async (extrinsic) => {
+
+          const { signer, hash, method: { args } } = extrinsic;
+          if(this.api.tx.staking.setPayee.is(extrinsic)){
+
+            for (const validator of this.validators) {
+              if(signer.toString() == validator.address || signer.toString() == validator.controllerAddress){
+                this.logger.info(`Found setPayee extrinsic for validator ${validator.address}`)
+                this.promClient.setStatusValidatorPayeeChanged(validator.name)
+              }
+            }
+          }
+        })
+        this.logger.debug(`Scanner | Processed block ${this.tobeScannedBlock}`)
+      }
+      this.logger.info(`****** | Scan ended at block ${this.tobeScannedBlock} | ******`)
     }
 
     private async _subscribeEvents(): Promise<void> {
@@ -167,6 +213,7 @@ export class Subscriber {
     private async _newEraHandler(newEraIndex: number): Promise<void>{
       this.currentEraIndex = newEraIndex;
       this.validatorActiveSet = await this.api.query.session.validators();
+      await this._initValidatorsControllers();
     }
 
     private async _getImOnlineParametersAtomic(header: Header): Promise<ValidatorImOnlineParameters> {
@@ -221,6 +268,14 @@ export class Subscriber {
         // always increase metric even the first time, so that we initialize the time serie
         // https://github.com/prometheus/prometheus/issues/1673
         this.promClient.resetTotalValidatorOfflineReports(account.name, account.address);
+      });
+    }
+
+    private _initPayeeMetrics(): void {
+      this.validators.forEach((account) => {
+        // always increase metric even the first time, so that we initialize the time serie
+        // https://github.com/prometheus/prometheus/issues/1673
+        this.promClient.resetStatusValidatorPayeeChanged(account.name)
       });
     }
 

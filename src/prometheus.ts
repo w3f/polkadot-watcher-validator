@@ -13,6 +13,7 @@ export class Prometheus implements PromClient {
     private totalValidatorOfflineReports: promClient.Gauge;
     private stateValidatorOfflineSessionReports: promClient.Gauge;
     private stateValidatorOutOfActiveSetReports: promClient.Gauge;
+    private stateValidatorPayeeReports: promClient.Gauge;
 
     constructor(private readonly network: string, private readonly logger: Logger) {
         this._initMetrics()
@@ -70,6 +71,15 @@ export class Prometheus implements PromClient {
       this.stateValidatorOutOfActiveSetReports.set({network:this.network, name }, 0);        
     }
 
+    setStatusValidatorPayeeChanged(name: string): void{
+      this.stateValidatorPayeeReports.set({network:this.network, name }, 1);
+      setTimeout(()=>this.resetStatusValidatorPayeeChanged(name),1200000)//the metric autoresolves after 20 minutes
+    }
+
+    resetStatusValidatorPayeeChanged(name: string): void{
+      this.stateValidatorPayeeReports.set({network:this.network, name }, 0);        
+    }
+
     _initMetrics(): void {
         this.totalBlocksProduced = new promClient.Counter({
             name: 'polkadot_blocks_produced_total',
@@ -90,6 +100,11 @@ export class Prometheus implements PromClient {
           name: 'polkadot_validator_out_of_active_set_reports_state',
           help: 'Whether a validator is reported as outside of the current Era validators active set',
           labelNames: ['network', 'name']
-      });
+        });
+        this.stateValidatorPayeeReports = new promClient.Gauge({
+          name: 'polkadot_validator_payee_state',
+          help: 'Whether a validator has changed the payee destination recently',
+          labelNames: ['network', 'name']
+        });
     }
 }
