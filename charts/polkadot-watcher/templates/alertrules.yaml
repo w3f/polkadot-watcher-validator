@@ -61,6 +61,13 @@ spec:
       for: 2m
       labels:
         severity: info
-        origin: {{ .Values.prometheusRules.origin }}  
-            
+        origin: {{ .Values.prometheusRules.origin }}
+    - alert: ValidatorRewardDestinationChanged
+      annotations:
+        message: 'Target {{`{{ $labels.name }}`}} has changed his reward destination'
+      expr: polkadot_validator_payee_state > 0
+      for: 2m
+      labels:
+        severity: info
+        origin: {{ .Values.prometheusRules.origin }}          
 {{ end }}

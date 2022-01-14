@@ -5,10 +5,12 @@ import { PromClient } from "../src/types";
 
 
 export class PrometheusMock implements PromClient {
+    
     private _totalBlocksProduced = 0;
     private _totalValidatorOfflineReports = 0;
     private _stateValidatorOffline = 0;
     private _stateValidatorOutOfActiveSet = 0;
+    private _stateValidatorPayeeReports = 0;
 
     increaseTotalBlocksProduced(name: string, address: string): void {
         this._totalBlocksProduced++;
@@ -35,6 +37,13 @@ export class PrometheusMock implements PromClient {
     resetStatusValidatorOutOfActiveSet(name: string): void {
       this._stateValidatorOutOfActiveSet = 0
     }
+    setStatusValidatorPayeeChanged(name: string): void {
+      this._stateValidatorPayeeReports = 1;
+    }
+    resetStatusValidatorPayeeChanged(name: string): void {
+      this._stateValidatorPayeeReports = 0;
+    }
+
 
     get totalBlocksProduced(): number {
         return this._totalBlocksProduced;
@@ -47,5 +56,8 @@ export class PrometheusMock implements PromClient {
     }
     get statusValidatorOutOfActiveSet(): number {
       return this._stateValidatorOutOfActiveSet;
+    }
+    get statusValidatorPayeeChanged(): number {
+      return this._stateValidatorPayeeReports;
     }
 }

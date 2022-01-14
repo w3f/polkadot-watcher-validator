@@ -8,6 +8,7 @@ export interface MatrixbotConfig {
 export interface Subscribable {
     name: string;
     address: string;
+    controllerAddress?: string;
 }
 
 export interface SubscriberConfig {
@@ -32,6 +33,8 @@ export interface PromClient {
     isValidatorStatusOffline(name: string): boolean;
     setStatusValidatorOutOfActiveSet(name: string): void;
     resetStatusValidatorOutOfActiveSet(name: string): void;
+    setStatusValidatorPayeeChanged(name: string): void;
+    resetStatusValidatorPayeeChanged(name: string): void;
 }
 
 interface LabelMap {

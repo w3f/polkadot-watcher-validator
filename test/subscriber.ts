@@ -63,6 +63,7 @@ describe('Subscriber cfg1, with a started network', () => {
                 prometheus.totalValidatorOfflineReports.should.be.eq(0)
                 prometheus.statusValidatorOffline.should.be.eq(0)
                 prometheus.statusValidatorOutOfActiveSet.should.be.eq(0)
+                prometheus.statusValidatorPayeeChanged.should.be.eq(0)
             });
         });
     });
@@ -97,6 +98,7 @@ describe('Subscriber cfg2, with a started network', () => {
               prometheus.totalValidatorOfflineReports.should.be.eq(0)
               prometheus.statusValidatorOffline.should.be.eq(0)
               prometheus.statusValidatorOutOfActiveSet.should.be.eq(1)
+              prometheus.statusValidatorPayeeChanged.should.be.eq(0)
           });
       });
   });
