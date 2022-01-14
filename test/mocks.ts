@@ -37,10 +37,10 @@ export class PrometheusMock implements PromClient {
     resetStatusValidatorOutOfActiveSet(name: string): void {
       this._stateValidatorOutOfActiveSet = 0
     }
-    setStatusValidatorPayeeChanged(name: string): void {
+    setStatusValidatorPayeeChanged(name: string, address: string): void {
       this._stateValidatorPayeeReports = 1;
     }
-    resetStatusValidatorPayeeChanged(name: string): void {
+    resetStatusValidatorPayeeChanged(name: string, address: string): void {
       this._stateValidatorPayeeReports = 0;
     }
 
