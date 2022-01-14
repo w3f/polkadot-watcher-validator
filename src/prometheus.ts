@@ -74,20 +74,21 @@ export class Prometheus implements PromClient {
       this.stateValidatorOutOfActiveSetReports.set({network:this.network, name }, 0);        
     }
 
-    setStatusValidatorPayeeChanged(name: string): void{
-      if(this.payeeTimeouts.has(name)){
-        clearTimeout(this.payeeTimeouts.get(name))
-        this.payeeTimeouts.delete(name)
+    setStatusValidatorPayeeChanged(name: string, address: string): void{
+      const key = JSON.stringify({name,address})
+      if(this.payeeTimeouts.has(key)){
+        clearTimeout(this.payeeTimeouts.get(key))
+        this.payeeTimeouts.delete(key)
       }
 
-      this.stateValidatorPayeeReports.set({network:this.network, name }, 1);
+      this.stateValidatorPayeeReports.set({network:this.network, name, address}, 1);
       
-      const timeoutID = setTimeout(()=>this.resetStatusValidatorPayeeChanged(name),payeeMetricAutoresolveMillis)
-      this.payeeTimeouts[name] = timeoutID
+      const timeoutID = setTimeout(()=>this.resetStatusValidatorPayeeChanged(name,address),payeeMetricAutoresolveMillis)
+      this.payeeTimeouts[key] = timeoutID
     }
 
-    resetStatusValidatorPayeeChanged(name: string): void{
-      this.stateValidatorPayeeReports.set({network:this.network, name }, 0);        
+    resetStatusValidatorPayeeChanged(name: string, address: string): void{
+      this.stateValidatorPayeeReports.set({network:this.network, name,address }, 0);        
     }
 
     _initMetrics(): void {
@@ -114,7 +115,7 @@ export class Prometheus implements PromClient {
         this.stateValidatorPayeeReports = new promClient.Gauge({
           name: 'polkadot_validator_payee_state',
           help: 'Whether a validator has changed the payee destination recently',
-          labelNames: ['network', 'name']
+          labelNames: ['network', 'name', 'address']
         });
     }
 }

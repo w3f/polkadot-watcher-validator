@@ -143,7 +143,7 @@ export class Subscriber {
           for (const validator of this.validators) {
             if(signer.toString() == validator.address || signer.toString() == validator.controllerAddress){
               this.logger.info(`Found setPayee extrinsic for validator ${validator.name}`)
-              this.promClient.setStatusValidatorPayeeChanged(validator.name)
+              this.promClient.setStatusValidatorPayeeChanged(validator.name, validator.address)
             }
           }
         }
@@ -260,7 +260,7 @@ export class Subscriber {
       this.validators.forEach((account) => {
         // always increase metric even the first time, so that we initialize the time serie
         // https://github.com/prometheus/prometheus/issues/1673
-        this.promClient.resetStatusValidatorPayeeChanged(account.name)
+        this.promClient.resetStatusValidatorPayeeChanged(account.name, account.address)
       });
     }
 
