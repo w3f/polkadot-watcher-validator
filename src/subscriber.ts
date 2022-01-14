@@ -52,7 +52,7 @@ export class Subscriber {
     private async _initValidatorsControllers(): Promise<void>{
       for (const validator of this.validators) {
         const controller = await this.api.query.staking.bonded(validator.address)
-        validator.controllerAddress = controller.unwrap().toString()
+        validator.controllerAddress = controller.unwrapOr("").toString()
       }
     }
 
