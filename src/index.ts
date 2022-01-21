@@ -1,7 +1,7 @@
 import process from 'process';
 import program from 'commander';
-
 import { startAction } from './actions/start';
+import '@polkadot/api-augment'; //https://github.com/polkadot-js/api/issues/4450
 
 
 program
