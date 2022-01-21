@@ -7,6 +7,7 @@ import { Client } from '../src/client';
 import {
     PrometheusMock
 } from './mocks';
+import '@polkadot/api-augment';
 
 should();
 

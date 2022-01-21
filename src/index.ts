@@ -1,5 +1,6 @@
 import process from 'process';
 import program from 'commander';
+import '@polkadot/api-augment';
 
 import { startAction } from './actions/start';
 
