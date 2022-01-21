@@ -1,3 +1,4 @@
+import '@polkadot/api-augment'; //https://github.com/polkadot-js/api/issues/4450
 import { TestPolkadotRPC } from '@w3f/test-utils';
 import { createLogger } from '@w3f/logger';
 import { should } from 'chai';
@@ -7,7 +8,6 @@ import { Client } from '../src/client';
 import {
     PrometheusMock
 } from './mocks';
-import '@polkadot/api-augment';
 
 should();
 
