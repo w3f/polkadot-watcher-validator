@@ -696,10 +696,10 @@
     async-wait-until "^1.2.6"
     fs-extra "^9.0.1"
 
-"@w3f/test-utils@^1.2.14":
-  version "1.2.14"
-  resolved "https://registry.yarnpkg.com/@w3f/test-utils/-/test-utils-1.2.14.tgz#0438c70f423e8b9838834d9757bb82af5188c99e"
-  integrity sha512-4b24x2VaPS1kpEsHp6p6X2mX4vYYTjOEhcTn9avb2Sh4zHVBf985X1vLwVXsBz30gekQoMUV/nieIeJYwKOblg==
+"@w3f/test-utils@^1.2.16":
+  version "1.2.16"
+  resolved "https://registry.yarnpkg.com/@w3f/test-utils/-/test-utils-1.2.16.tgz#09981a94fbd2ff8dd3d619442481aa44b4f0d6a9"
+  integrity sha512-IgQo2HChQ9fEAXAG1YpCCcMZJAt7oitpZHz8sGlZpk4TCGn40xHNTsVEvzFBJAv3t0K3nCfvGofipuwolr3H8w==
   dependencies:
     "@polkadot/api" "^7.4.1"
     "@w3f/logger" "^0.4.2"
