@@ -40,7 +40,7 @@
     "@typescript-eslint/eslint-plugin": "^2.25.0",
     "@typescript-eslint/parser": "^2.25.0",
     "@w3f/polkadot-api-client": "^1.2.13",
-    "@w3f/test-utils": "^1.2.14",
+    "@w3f/test-utils": "^1.2.16",
     "chai": "^4.3.6",
     "eslint": "7.32.0",
     "fs-extra": "^9.0.0",
