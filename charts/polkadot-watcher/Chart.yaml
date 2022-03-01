@@ -1,4 +1,5 @@
 description: Polkadot Watcher
 name: polkadot-watcher
-version: v3.2.2
+version: v3.2.4
+appVersion: v3.2.4
 apiVersion: v2
