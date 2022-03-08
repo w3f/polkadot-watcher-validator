@@ -39,7 +39,7 @@
     "@types/tmp": "^0.2.3",
     "@typescript-eslint/eslint-plugin": "^2.25.0",
     "@typescript-eslint/parser": "^2.25.0",
-    "@w3f/test-utils": "^1.2.18",
+    "@w3f/test-utils": "^1.2.20",
     "chai": "^4.3.6",
     "eslint": "7.32.0",
     "fs-extra": "^9.0.0",
