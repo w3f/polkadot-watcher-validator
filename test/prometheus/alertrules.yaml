@@ -68,7 +68,7 @@ tests:
                   address: Gt6HqWBhdu4Sy1u8ASTbS1qf2Ac5gwdegwr8tWN8saMxPt5
                   network: kusama
                 exp_annotations:
-                    message: "Target [node0](https://kusama.subscan.io/validator/Gt6HqWBhdu4Sy1u8ASTbS1qf2Ac5gwdegwr8tWN8saMxPt5) has changed his reward destination"
+                    message: "Target [node0](https://kusama.subscan.io/validator/Gt6HqWBhdu4Sy1u8ASTbS1qf2Ac5gwdegwr8tWN8saMxPt5) may have changed his reward destination recently, please double check"
           - eval_time: 5m # Values: 0 0 1 1 1 0
             alertname: ValidatorRewardDestinationChanged
             exp_alerts:                 

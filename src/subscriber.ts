@@ -1,6 +1,6 @@
 import { ApiPromise } from '@polkadot/api';
 import { Event } from '@polkadot/types/interfaces/system';
-import { Header, SessionIndex, ValidatorId } from '@polkadot/types/interfaces';
+import { Header, SessionIndex, ValidatorId, Address } from '@polkadot/types/interfaces';
 import { Tuple, Vec } from '@polkadot/types/codec';
 import { Logger } from '@w3f/logger';
 
@@ -138,17 +138,29 @@ export class Subscriber {
       block.block.extrinsics.forEach( async (extrinsic) => {
 
         const { signer } = extrinsic;
-        if(this.api.tx.staking.setPayee.is(extrinsic)){
-
-          for (const validator of this.validators) {
-            if(signer.toString() == validator.address || signer.toString() == validator.controllerAddress){
-              this.logger.info(`Found setPayee extrinsic for validator ${validator.name}`)
-              this.promClient.setStatusValidatorPayeeChanged(validator.name, validator.address)
+        if(this.api.tx.staking.setPayee.is(extrinsic) || this.api.tx.staking.bond.is(extrinsic)){
+          this._handlePayeeChangeDetection(signer)
+        }
+        else if(this.api.tx.utility.batch.is(extrinsic) || this.api.tx.utility.batchAll.is(extrinsic)){
+          //this.logger.debug(`detected new utility > batch extrinsic`)
+          const { signer, method: { args } } = extrinsic;
+          for (const callAny of args[0] as any) {
+            const call = this.api.registry.createType('Call',callAny)
+            if(this.api.tx.staking.setPayee.is(call) || this.api.tx.staking.bond.is(call)){
+              this._handlePayeeChangeDetection(signer)
             }
           }
         }
       })
-      
+    }
+
+    private _handlePayeeChangeDetection(signer: Address){
+      for (const validator of this.validators) {
+        if(signer.toString() == validator.address || signer.toString() == validator.controllerAddress){
+          this.logger.info(`Found setPayee or bond extrinsic for validator ${validator.name}`)
+          this.promClient.setStatusValidatorPayeeChanged(validator.name, validator.address)
+        }
+      }
     }
 
     private async _checkValidatorOfflineStatus(parameters: ValidatorImOnlineParameters,validator: Subscribable,validatorActiveSetIndex: number): Promise<void>{

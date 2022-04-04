@@ -114,7 +114,7 @@ export class Prometheus implements PromClient {
         });
         this.stateValidatorPayeeReports = new promClient.Gauge({
           name: 'polkadot_validator_payee_state',
-          help: 'Whether a validator has changed the payee destination recently',
+          help: 'Whether a validator may have changed the payee destination recently',
           labelNames: ['network', 'name', 'address']
         });
     }

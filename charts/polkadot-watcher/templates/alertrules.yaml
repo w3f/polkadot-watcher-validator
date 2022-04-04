@@ -64,7 +64,7 @@ spec:
         origin: {{ .Values.prometheusRules.origin }}
     - alert: ValidatorRewardDestinationChanged
       annotations:
-        message: 'Target [{{`{{ $labels.name }}`}}](https://{{`{{ $labels.network }}`}}.subscan.io/validator/{{`{{ $labels.address }}`}}) has changed his reward destination'
+        message: 'Target [{{`{{ $labels.name }}`}}](https://{{`{{ $labels.network }}`}}.subscan.io/validator/{{`{{ $labels.address }}`}}) may have changed his reward destination recently, please double check'
       expr: polkadot_validator_payee_state > 0
       for: 2m
       labels:
