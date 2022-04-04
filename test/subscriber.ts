@@ -9,7 +9,14 @@ import {
     PrometheusMock
 } from './mocks';
 
+import { cryptoWaitReady} from '@polkadot/util-crypto'
+import { Keyring } from '@polkadot/api';
+import { KeyringPair } from '@polkadot/keyring/types';
+
 should();
+
+let alice: KeyringPair
+let keyring: Keyring
 
 const cfg = {
     logLevel: 'info',
@@ -35,7 +42,13 @@ function delay(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-describe('Subscriber cfg1, with a started network', () => {
+describe('with a started WASM interface', async () => {
+    await cryptoWaitReady()
+    keyring = new Keyring({ type: 'sr25519' });
+    alice = keyring.addFromUri('//Alice', { name: 'Alice default' });
+})
+
+describe('Subscriber cfg1, with a started network', async () => {
     const testRPC = new TestPolkadotRPC();
     const prometheus = new PrometheusMock();
     const logger = createLogger();
@@ -66,7 +79,36 @@ describe('Subscriber cfg1, with a started network', () => {
                 prometheus.statusValidatorOutOfActiveSet.should.be.eq(0)
                 prometheus.statusValidatorPayeeChanged.should.be.eq(0)
             });
+
+            it('should detect a payee change attempt...', async () => {
+                await delay(6000);
+
+                prometheus.resetStatusValidatorPayeeChanged(cfg.validators[0].name,cfg.validators[0].address)
+                prometheus.statusValidatorPayeeChanged.should.be.eq(0)
+
+                const call = testRPC.api().tx.staking.setPayee({Staked:{}}) //About Staked: not so relevant what the value is, it will be detected anyway 
+                await call.signAndSend(alice)
+
+                await delay(6000);
+
+                prometheus.statusValidatorPayeeChanged.should.be.eq(1)
+            });
+
+            it('should detect a payee change attempt 2...', async () => {
+                await delay(6000);
+
+                prometheus.resetStatusValidatorPayeeChanged(cfg.validators[0].name,cfg.validators[0].address)
+                prometheus.statusValidatorPayeeChanged.should.be.eq(0)
+
+                const call = testRPC.api().tx.staking.bond(cfg.validators[0].address,1,{Stash:{}}) //About Stash: not so relevant what the value is, it will be detected anyway 
+                await call.signAndSend(alice)
+
+                await delay(6000);
+
+                prometheus.statusValidatorPayeeChanged.should.be.eq(1)
+            });
         });
+
     });
 });
 
@@ -101,6 +143,16 @@ describe('Subscriber cfg2, with a started network', () => {
               prometheus.statusValidatorOutOfActiveSet.should.be.eq(1)
               prometheus.statusValidatorPayeeChanged.should.be.eq(0)
           });
+          it('should NOT detect a payee change attempt, Alice is not under monitoring...', async () => {
+            await delay(6000);
+
+            const call = testRPC.api().tx.staking.bond(alice.address,1,{Stash:{}}) //About Stash: not so relevant what the value is 
+            await call.signAndSend(alice)
+
+            await delay(6000);
+
+            prometheus.statusValidatorPayeeChanged.should.be.eq(0)
+        });
       });
   });
 });
