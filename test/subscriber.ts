@@ -78,6 +78,7 @@ describe('Subscriber cfg1, with a started network', async () => {
                 prometheus.statusValidatorOffline.should.be.eq(0)
                 prometheus.statusValidatorOutOfActiveSet.should.be.eq(0)
                 prometheus.statusValidatorPayeeChanged.should.be.eq(0)
+                prometheus.statusValidatorCommissionChanged.should.be.eq(0)
             });
 
             it('should detect a payee change attempt...', async () => {
@@ -106,6 +107,19 @@ describe('Subscriber cfg1, with a started network', async () => {
                 await delay(6000);
 
                 prometheus.statusValidatorPayeeChanged.should.be.eq(1)
+            });
+            it('should detect a commission rate change attempt...', async () => {
+                await delay(6000);
+
+                prometheus.resetStatusValidatorCommissionChanged(cfg.validators[0].name,cfg.validators[0].address)
+                prometheus.statusValidatorCommissionChanged.should.be.eq(0)
+
+                const call = testRPC.api().tx.staking.validate({commission: 10}) 
+                await call.signAndSend(alice)
+
+                await delay(6000);
+
+                prometheus.statusValidatorCommissionChanged.should.be.eq(1)
             });
         });
 
@@ -142,6 +156,7 @@ describe('Subscriber cfg2, with a started network', () => {
               prometheus.statusValidatorOffline.should.be.eq(0)
               prometheus.statusValidatorOutOfActiveSet.should.be.eq(1)
               prometheus.statusValidatorPayeeChanged.should.be.eq(0)
+              prometheus.statusValidatorCommissionChanged.should.be.eq(0)
           });
           it('should NOT detect a payee change attempt, Alice is not under monitoring...', async () => {
             await delay(6000);
@@ -152,7 +167,17 @@ describe('Subscriber cfg2, with a started network', () => {
             await delay(6000);
 
             prometheus.statusValidatorPayeeChanged.should.be.eq(0)
-        });
+          });
+          it('should NOT detect a commission rate change attempt, Alice is not under monitoring...', async () => {
+            await delay(6000);
+
+            const call = testRPC.api().tx.staking.validate({commission: 10})
+            await call.signAndSend(alice)
+
+            await delay(6000);
+
+            prometheus.statusValidatorCommissionChanged.should.be.eq(0)
+          });
       });
   });
 });

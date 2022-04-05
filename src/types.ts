@@ -35,6 +35,8 @@ export interface PromClient {
     resetStatusValidatorOutOfActiveSet(name: string): void;
     setStatusValidatorPayeeChanged(name: string, address: string): void;
     resetStatusValidatorPayeeChanged(name: string, address: string): void;
+    setStatusValidatorCommissionChanged(name: string, address: string): void;
+    resetStatusValidatorCommissionChanged(name: string, address: string): void;
 }
 
 interface LabelMap {

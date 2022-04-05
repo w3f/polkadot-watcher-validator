@@ -11,6 +11,7 @@ export class PrometheusMock implements PromClient {
     private _stateValidatorOffline = 0;
     private _stateValidatorOutOfActiveSet = 0;
     private _stateValidatorPayeeReports = 0;
+    private _stateValidatorCommissionReports = 0;
 
     increaseTotalBlocksProduced(name: string, address: string): void {
         this._totalBlocksProduced++;
@@ -43,6 +44,12 @@ export class PrometheusMock implements PromClient {
     resetStatusValidatorPayeeChanged(name: string, address: string): void {
       this._stateValidatorPayeeReports = 0;
     }
+    setStatusValidatorCommissionChanged(name: string, address: string): void {
+      this._stateValidatorCommissionReports = 1;
+    }
+    resetStatusValidatorCommissionChanged(name: string, address: string): void {
+      this._stateValidatorCommissionReports = 0;
+    }
 
 
     get totalBlocksProduced(): number {
@@ -59,5 +66,8 @@ export class PrometheusMock implements PromClient {
     }
     get statusValidatorPayeeChanged(): number {
       return this._stateValidatorPayeeReports;
+    }
+    get statusValidatorCommissionChanged(): number {
+      return this._stateValidatorCommissionReports;
     }
 }

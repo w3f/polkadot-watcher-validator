@@ -60,12 +60,14 @@ export class Subscriber {
       this._initProducerMetrics();
       this._initSessionOfflineMetrics();
       this._initOutOfActiveSetMetrics();
-      this._initPayeeMetrics()
+      this._initPayeeMetrics();
+      this._initCommissionMetrics();
       
       this.api.rpc.chain.subscribeNewHeads(async (header) => {
         this._producerHandler(header);
         this._validatorStatusHandler(header);
         this._payeeChangeHandler(header);
+        this._commissionChangeHandler(header);
       })
     }
 
@@ -159,6 +161,40 @@ export class Subscriber {
         if(signer.toString() == validator.address || signer.toString() == validator.controllerAddress){
           this.logger.info(`Found setPayee or bond extrinsic for validator ${validator.name}`)
           this.promClient.setStatusValidatorPayeeChanged(validator.name, validator.address)
+        }
+      }
+    }
+
+    private async _commissionChangeHandler(header: Header): Promise<void> {
+
+      const currentBlock = header.number.unwrap()
+      const blockHash = await this.api.rpc.chain.getBlockHash(currentBlock)
+      const block = await this.api.rpc.chain.getBlock(blockHash)
+
+      block.block.extrinsics.forEach( async (extrinsic) => {
+
+        const { signer } = extrinsic;
+        if(this.api.tx.staking.validate.is(extrinsic)){
+          this._handleCommissionChangeDetection(signer)
+        }
+        else if(this.api.tx.utility.batch.is(extrinsic) || this.api.tx.utility.batchAll.is(extrinsic)){
+          //this.logger.debug(`detected new utility > batch extrinsic`)
+          const { signer, method: { args } } = extrinsic;
+          for (const callAny of args[0] as any) {
+            const call = this.api.registry.createType('Call',callAny)
+            if(this.api.tx.staking.validate.is(call)){
+              this._handleCommissionChangeDetection(signer)
+            }
+          }
+        }
+      })
+    }
+
+    private _handleCommissionChangeDetection(signer: Address){
+      for (const validator of this.validators) {
+        if(signer.toString() == validator.address || signer.toString() == validator.controllerAddress){
+          this.logger.info(`Found validate extrinsic for validator ${validator.name}`)
+          this.promClient.setStatusValidatorCommissionChanged(validator.name, validator.address)
         }
       }
     }
@@ -273,6 +309,14 @@ export class Subscriber {
         // always increase metric even the first time, so that we initialize the time serie
         // https://github.com/prometheus/prometheus/issues/1673
         this.promClient.resetStatusValidatorPayeeChanged(account.name, account.address)
+      });
+    }
+
+    private _initCommissionMetrics(): void {
+      this.validators.forEach((account) => {
+        // always increase metric even the first time, so that we initialize the time serie
+        // https://github.com/prometheus/prometheus/issues/1673
+        this.promClient.resetStatusValidatorCommissionChanged(account.name, account.address)
       });
     }
 
