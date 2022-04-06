@@ -3,7 +3,7 @@ import { register } from 'prom-client';
 import * as promClient from 'prom-client';
 import { Logger } from '@w3f/logger';
 import { PromClient } from './types';
-import { payeeMetricAutoresolveMillis } from './constants';
+import { commissionMetricAutoresolveMillis, payeeMetricAutoresolveMillis } from './constants';
 
 
 export class Prometheus implements PromClient {
@@ -17,6 +17,9 @@ export class Prometheus implements PromClient {
     
     private stateValidatorPayeeReports: promClient.Gauge;
     private payeeTimeouts = new Map<string,NodeJS.Timeout>()
+
+    private stateValidatorCommissionReports: promClient.Gauge;
+    private commissionTimeouts = new Map<string,NodeJS.Timeout>()
 
     constructor(private readonly network: string, private readonly logger: Logger) {
         this._initMetrics()
@@ -91,6 +94,23 @@ export class Prometheus implements PromClient {
       this.stateValidatorPayeeReports.set({network:this.network, name,address }, 0);        
     }
 
+    setStatusValidatorCommissionChanged(name: string, address: string): void{
+      const key = JSON.stringify({name,address})
+      if(this.commissionTimeouts.has(key)){
+        clearTimeout(this.commissionTimeouts.get(key))
+        this.commissionTimeouts.delete(key)
+      }
+
+      this.stateValidatorCommissionReports.set({network:this.network, name, address}, 1);
+      
+      const timeoutID = setTimeout(()=>this.resetStatusValidatorCommissionChanged(name,address),commissionMetricAutoresolveMillis)
+      this.commissionTimeouts[key] = timeoutID
+    }
+
+    resetStatusValidatorCommissionChanged(name: string, address: string): void{
+      this.stateValidatorCommissionReports.set({network:this.network, name,address }, 0);        
+    }
+
     _initMetrics(): void {
         this.totalBlocksProduced = new promClient.Counter({
             name: 'polkadot_blocks_produced_total',
@@ -115,6 +135,11 @@ export class Prometheus implements PromClient {
         this.stateValidatorPayeeReports = new promClient.Gauge({
           name: 'polkadot_validator_payee_state',
           help: 'Whether a validator may have changed the payee destination recently',
+          labelNames: ['network', 'name', 'address']
+        });
+        this.stateValidatorCommissionReports = new promClient.Gauge({
+          name: 'polkadot_validator_commission_state',
+          help: 'Whether a validator may have changed the commission rate recently',
           labelNames: ['network', 'name', 'address']
         });
     }

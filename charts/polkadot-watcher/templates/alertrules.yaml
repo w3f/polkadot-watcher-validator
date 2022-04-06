@@ -69,5 +69,13 @@ spec:
       for: 2m
       labels:
         severity: info
-        origin: {{ .Values.prometheusRules.origin }}          
+        origin: {{ .Values.prometheusRules.origin }}   
+    - alert: ValidatorCommissionRateChanged
+      annotations:
+        message: 'Target [{{`{{ $labels.name }}`}}](https://{{`{{ $labels.network }}`}}.subscan.io/validator/{{`{{ $labels.address }}`}}) may have changed his commission rate recently, please double check'
+      expr: polkadot_validator_commission_state > 0
+      for: 2m
+      labels:
+        severity: info
+        origin: {{ .Values.prometheusRules.origin }}              
 {{ end }}
