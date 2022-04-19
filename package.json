@@ -33,7 +33,7 @@
     "@types/chai": "^4.3.0",
     "@types/express": "^4.17.6",
     "@types/fs-extra": "^8.1.0",
-    "@types/lodash": "^4.14.181",
+    "@types/lodash": "^4.14.182",
     "@types/mocha": "^9.1.0",
     "@types/node": "^14.18.12",
     "@types/tmp": "^0.2.3",
