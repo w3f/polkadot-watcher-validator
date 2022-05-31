@@ -1,5 +1,5 @@
 import express from 'express';
-import { createLogger } from '@w3f/logger';
+import { LoggerSingleton } from '../logger'
 import { Config } from '@w3f/config';
 
 import { Subscriber } from '../subscriber';
@@ -26,17 +26,17 @@ export async function startAction(cmd): Promise<void> {
         })
     server.listen(cfg.port);
 
-    const logger = createLogger(cfg.logLevel);
-
-    const api = await new Client(cfg,logger).connect()
+    LoggerSingleton.setInstance(cfg.logLevel)
+    
+    const api = await new Client(cfg).connect()
     const chain = await api.rpc.system.chain()
     const networkId = chain.toString().toLowerCase()
 
-    const promClient = new Prometheus(networkId,logger);
+    const promClient = new Prometheus(networkId);
     promClient.injectMetricsRoute(server);
     promClient.startCollection();
 
-    const subscriber = new Subscriber(cfg, api, promClient, logger);
+    const subscriber = new Subscriber(cfg, api, promClient);
     await subscriber.start();
 
     _addTestEndpoint(server,subscriber)

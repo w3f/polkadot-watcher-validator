@@ -13,7 +13,7 @@ spec:
       annotations:
         message: 'Blocks were not produced for 1 hour by {{`{{ $labels.name }}`}}'
         runbook_url: "https://github.com/w3f/infrastructure/wiki/Producer-Stall"
-      expr: increase(polkadot_blocks_produced_total[10m]) == 0 and polkadot_validator_out_of_active_set_reports_state == 0
+      expr: increase(polkadot_validator_blocks_produced[10m]) == 0 and polkadot_validator_out_of_active_set_state == 0
       for: 60m
       labels:
         severity: warning
@@ -22,33 +22,33 @@ spec:
       annotations:
         message: 'Blocks were not produced for 3 hours by {{`{{ $labels.name }}`}}'
         runbook_url: "https://github.com/w3f/infrastructure/wiki/Producer-Stall"
-      expr: increase(polkadot_blocks_produced_total[10m]) == 0 and polkadot_validator_out_of_active_set_reports_state == 0
+      expr: increase(polkadot_validator_blocks_produced[10m]) == 0 and polkadot_validator_out_of_active_set_state == 0
       for: 180m
       labels:
         severity: critical
         origin: {{ .Values.prometheusRules.origin }}
     - alert: ValidatorOffline
       annotations:
-        message: '{{`{{ $labels.name }}`}} was reported offline, check https://{{`{{ $labels.network }}`}}.subscan.io/event?address=&module=imonline&event=someoffline for details. Check his account for eventul slahes: https://{{`{{ $labels.network }}`}}.subscan.io/account/{{`{{ $labels.address }}`}}?tab=reward'
+        message: '{{`{{ $labels.name }}`}} was reported offline, check https://{{`{{ $labels.network }}`}}.subscan.io/event?address=&module=imonline&event=someoffline for details. Check his account for eventul slahes: https://{{`{{ $labels.network }}`}}.subscan.io/account/{{`{{ $labels.address }}`}}?tab=reward. This message is going to RESOLVE by itself soon.'
         runbook_url: "https://github.com/w3f/infrastructure/wiki/Validator-Offline"
-      expr: polkadot_offline_validator_reports_total > 0
+      expr: increase(polkadot_validator_offline_reports[10m]) > 0
       for: 30s
       labels:
         severity: critical
         origin: {{ .Values.prometheusRules.origin }}
-    {{ if ne .Values.prometheusRules.heartbeat false }}
-    - alert: ValidatorOfflineSessionLong
+    {{ if ne .Values.prometheusRules.offlineRisk false }}
+    - alert: ValidatorOfflineRiskLong
       annotations:
-        message: 'Target {{`{{ $labels.name }}`}} has either not authored any block or sent any heartbeat yet in this session'
-      expr: polkadot_offline_validator_session_reports_state > 0
+        message: 'Target {{`{{ $labels.name }}`}} has either not authored any block or sent any heartbeat yet in this session. It is risking to be caught offline'
+      expr: polkadot_validator_offline_risk_state > 0
       for: 10m
       labels:
         severity: critical
         origin: {{ .Values.prometheusRules.origin }}        
-    - alert: ValidatorOfflineSessionShort
+    - alert: ValidatorOfflineRiskShort
       annotations:
-        message: 'Target {{`{{ $labels.name }}`}} has either not authored any block or sent any heartbeat yet in this session'
-      expr: polkadot_offline_validator_session_reports_state > 0
+        message: 'Target {{`{{ $labels.name }}`}} has either not authored any block or sent any heartbeat yet in this session. It is risking to be caught offline'
+      expr: polkadot_validator_offline_risk_state > 0
       for: 8m
       labels:
         severity: warning
@@ -57,25 +57,41 @@ spec:
     - alert: ValidatorOutOfActiveSet
       annotations:
         message: 'Target {{`{{ $labels.name }}`}} is not present in the current validation active set because it has not been selected by Phragmen'
-      expr: polkadot_validator_out_of_active_set_reports_state > 0
+      expr: polkadot_validator_out_of_active_set_state > 0
       for: 2m
       labels:
         severity: info
         origin: {{ .Values.prometheusRules.origin }}
     - alert: ValidatorRewardDestinationChanged
       annotations:
-        message: 'Target [{{`{{ $labels.name }}`}}](https://{{`{{ $labels.network }}`}}.subscan.io/validator/{{`{{ $labels.address }}`}}) may have changed his reward destination recently, please double check'
-      expr: polkadot_validator_payee_state > 0
-      for: 2m
+        message: 'Target [{{`{{ $labels.name }}`}}](https://{{`{{ $labels.network }}`}}.subscan.io/validator/{{`{{ $labels.address }}`}}) may have changed his reward destination recently, please double check. This message is going to RESOLVE by itself soon.'
+      expr: increase(polkadot_validator_payee_changed_reports[10m]) > 0
+      for: 30s
       labels:
-        severity: info
+        severity: warning
         origin: {{ .Values.prometheusRules.origin }}   
     - alert: ValidatorCommissionRateChanged
       annotations:
-        message: 'Target [{{`{{ $labels.name }}`}}](https://{{`{{ $labels.network }}`}}.subscan.io/validator/{{`{{ $labels.address }}`}}) may have changed his commission rate recently, please double check'
-      expr: polkadot_validator_commission_state > 0
-      for: 2m
+        message: 'Target [{{`{{ $labels.name }}`}}](https://{{`{{ $labels.network }}`}}.subscan.io/validator/{{`{{ $labels.address }}`}}) may have changed his commission rate recently, please double check. This message is going to RESOLVE by itself soon.'
+      expr: increase(polkadot_validator_commission_changed_reports[10m]) > 0
+      for: 30s
       labels:
-        severity: info
-        origin: {{ .Values.prometheusRules.origin }}              
+        severity: warning
+        origin: {{ .Values.prometheusRules.origin }}
+    - alert: ValidatorCommissionRateUnexpected
+      annotations:
+        message: 'Target [{{`{{ $labels.name }}`}}](https://{{`{{ $labels.network }}`}}.subscan.io/validator/{{`{{ $labels.address }}`}}) has an unexpected commission rate, please double check.'
+      expr: polkadot_validator_unexpected_commission_state > 0
+      for: 1m
+      labels:
+        severity: warning
+        origin: {{ .Values.prometheusRules.origin }}
+    - alert: ValidatorRewardDestinationUnexpected
+      annotations:
+        message: 'Target [{{`{{ $labels.name }}`}}](https://{{`{{ $labels.network }}`}}.subscan.io/validator/{{`{{ $labels.address }}`}}) has an unexpected reward destination, please double check.'
+      expr: polkadot_validator_unexpected_payee_state > 0
+      for: 1m
+      labels:
+        severity: warning
+        origin: {{ .Values.prometheusRules.origin }}     
 {{ end }}

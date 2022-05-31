@@ -1,27 +1,27 @@
 import * as express from 'express';
 import { register } from 'prom-client';
 import * as promClient from 'prom-client';
-import { Logger } from '@w3f/logger';
+import { Logger, LoggerSingleton } from './logger';
 import { PromClient } from './types';
-import { commissionMetricAutoresolveMillis, payeeMetricAutoresolveMillis } from './constants';
-
 
 export class Prometheus implements PromClient {
 
-    static readonly nameValidatorOfflineSessionMetric  = 'polkadot_offline_validator_session_reports_state';
+    static readonly nameOfflineRiskMetric  = 'polkadot_validator_offline_risk_state';
 
-    private totalBlocksProduced: promClient.Counter;
-    private totalValidatorOfflineReports: promClient.Gauge;
-    private stateValidatorOfflineSessionReports: promClient.Gauge;
-    private stateValidatorOutOfActiveSetReports: promClient.Gauge;
+    private blocksProducedReports: promClient.Counter;
+    private offlineReports: promClient.Counter;
+    private stateOfflineRisk: promClient.Gauge;
+    private stateOutOfActiveSet: promClient.Gauge;
     
-    private stateValidatorPayeeReports: promClient.Gauge;
-    private payeeTimeouts = new Map<string,NodeJS.Timeout>()
+    private payeeChangedReports: promClient.Counter;
+    private stateUnexpectedPayee: promClient.Gauge;
 
-    private stateValidatorCommissionReports: promClient.Gauge;
-    private commissionTimeouts = new Map<string,NodeJS.Timeout>()
+    private commissionChangedReports: promClient.Counter;
+    private stateUnexpectedCommission: promClient.Gauge;
 
-    constructor(private readonly network: string, private readonly logger: Logger) {
+    private readonly logger: Logger = LoggerSingleton.getInstance()
+
+    constructor(private readonly network: string) {
         this._initMetrics()
     }
 
@@ -39,107 +39,97 @@ export class Prometheus implements PromClient {
         })
     }
 
-    increaseTotalBlocksProduced(name: string, address: string): void {
-        this.totalBlocksProduced.inc({network:this.network, name, address })
+    increaseBlocksProducedReports(name: string, address: string): void {
+        this.blocksProducedReports.inc({network:this.network, name, address })
     }
 
-    initTotalBlocksProduced(name: string, address: string): void {
-      this.totalBlocksProduced.inc({network:this.network, name, address },0)
+    increaseOfflineReports(name: string, address: string): void {
+        this.offlineReports.inc({network:this.network, name, address });
     }
 
-    /* condition where you have been reported offline */
-    increaseTotalValidatorOfflineReports(name: string, address: string): void {
-        this.totalValidatorOfflineReports.inc({network:this.network, name, address });
+    setStatusOfflineRisk(name: string): void {
+        this.stateOfflineRisk.set({network:this.network, name }, 1);        
     }
 
-    resetTotalValidatorOfflineReports(name: string, address: string): void {
-        this.totalValidatorOfflineReports.set({network:this.network, name, address }, 0);
+    resetStatusOfflineRisk(name: string): void {
+        this.stateOfflineRisk.set({network:this.network, name }, 0);
     }
 
-    /* condition where you are risking to be reported as offline */
-    setStatusValidatorOffline(name: string): void {
-        this.stateValidatorOfflineSessionReports.set({network:this.network, name }, 1);        
+    isOfflineRiskStatusFiring(name: string): boolean {
+      return promClient.register.getSingleMetric(Prometheus.nameOfflineRiskMetric)['hashMap'][`name:${name},network:${this.network}`]['value'] === 1
     }
 
-    resetStatusValidatorOffline(name: string): void {
-        this.stateValidatorOfflineSessionReports.set({network:this.network, name }, 0);
+    setStatusOutOfActiveSet(name: string): void{
+      this.stateOutOfActiveSet.set({network:this.network, name }, 1);        
     }
 
-    isValidatorStatusOffline(name: string): boolean {
-      return promClient.register.getSingleMetric(Prometheus.nameValidatorOfflineSessionMetric)['hashMap'][`name:${name},network:${this.network}`]['value'] === 1
+    resetStatusOutOfActiveSet(name: string): void{
+      this.stateOutOfActiveSet.set({network:this.network, name }, 0);        
     }
 
-    setStatusValidatorOutOfActiveSet(name: string): void{
-      this.stateValidatorOutOfActiveSetReports.set({network:this.network, name }, 1);        
+    increasePayeeChangedReports(name: string, address: string): void{
+      this.payeeChangedReports.inc({network:this.network, name, address});
     }
 
-    resetStatusValidatorOutOfActiveSet(name: string): void{
-      this.stateValidatorOutOfActiveSetReports.set({network:this.network, name }, 0);        
+    setStatusValidatorPayeeUnexpected(name: string, address: string): void{
+      this.stateUnexpectedPayee.set({network:this.network, name,address }, 1);        
     }
 
-    setStatusValidatorPayeeChanged(name: string, address: string): void{
-      const key = JSON.stringify({name,address})
-      if(this.payeeTimeouts.has(key)){
-        clearTimeout(this.payeeTimeouts.get(key))
-        this.payeeTimeouts.delete(key)
-      }
-
-      this.stateValidatorPayeeReports.set({network:this.network, name, address}, 1);
-      
-      const timeoutID = setTimeout(()=>this.resetStatusValidatorPayeeChanged(name,address),payeeMetricAutoresolveMillis)
-      this.payeeTimeouts[key] = timeoutID
+    resetStatusValidatorPayeeUnexpected(name: string, address: string): void{
+      this.stateUnexpectedPayee.set({network:this.network, name,address }, 0);        
     }
 
-    resetStatusValidatorPayeeChanged(name: string, address: string): void{
-      this.stateValidatorPayeeReports.set({network:this.network, name,address }, 0);        
+    increaseCommissionChangedReports(name: string, address: string): void{
+      this.commissionChangedReports.inc({network:this.network, name, address}, 0);
     }
 
-    setStatusValidatorCommissionChanged(name: string, address: string): void{
-      const key = JSON.stringify({name,address})
-      if(this.commissionTimeouts.has(key)){
-        clearTimeout(this.commissionTimeouts.get(key))
-        this.commissionTimeouts.delete(key)
-      }
-
-      this.stateValidatorCommissionReports.set({network:this.network, name, address}, 1);
-      
-      const timeoutID = setTimeout(()=>this.resetStatusValidatorCommissionChanged(name,address),commissionMetricAutoresolveMillis)
-      this.commissionTimeouts[key] = timeoutID
+    setStatusValidatorCommissionUnexpected(name: string, address: string): void{
+      this.stateUnexpectedCommission.set({network:this.network, name,address }, 1);        
     }
 
-    resetStatusValidatorCommissionChanged(name: string, address: string): void{
-      this.stateValidatorCommissionReports.set({network:this.network, name,address }, 0);        
+    resetStatusValidatorCommissionUnexpected(name: string, address: string): void{
+      this.stateUnexpectedCommission.set({network:this.network, name,address }, 0);        
     }
 
     _initMetrics(): void {
-        this.totalBlocksProduced = new promClient.Counter({
-            name: 'polkadot_blocks_produced_total',
-            help: 'Total number of blocks produced by a validator',
+        this.blocksProducedReports = new promClient.Counter({
+            name: 'polkadot_validator_blocks_produced',
+            help: 'Number of blocks produced by a validator',
             labelNames: ['network', 'name', 'address']
         });
-        this.totalValidatorOfflineReports = new promClient.Gauge({
-            name: 'polkadot_offline_validator_reports_total',
-            help: 'Total times a validator has been reported offline',
+        this.offlineReports = new promClient.Gauge({
+            name: 'polkadot_validator_offline_reports',
+            help: 'Times a validator has been reported offline',
             labelNames: ['network', 'name', 'address']
         });
-        this.stateValidatorOfflineSessionReports = new promClient.Gauge({
-            name: Prometheus.nameValidatorOfflineSessionMetric,
-            help: 'Whether a validator is reported as offline in the current session',
+        this.stateOfflineRisk = new promClient.Gauge({
+            name: Prometheus.nameOfflineRiskMetric,
+            help: 'Whether a validator has not produced a block and neither has sent an expected heartbeat yet. It is risking to be caught offline',
             labelNames: ['network', 'name']
         });
-        this.stateValidatorOutOfActiveSetReports = new promClient.Gauge({
-          name: 'polkadot_validator_out_of_active_set_reports_state',
+        this.stateOutOfActiveSet = new promClient.Gauge({
+          name: 'polkadot_validator_out_of_active_set_state',
           help: 'Whether a validator is reported as outside of the current Era validators active set',
           labelNames: ['network', 'name']
         });
-        this.stateValidatorPayeeReports = new promClient.Gauge({
-          name: 'polkadot_validator_payee_state',
-          help: 'Whether a validator may have changed the payee destination recently',
+        this.payeeChangedReports = new promClient.Gauge({
+          name: 'polkadot_validator_payee_changed_reports',
+          help: 'Times a validator has changed the payee destination',
           labelNames: ['network', 'name', 'address']
         });
-        this.stateValidatorCommissionReports = new promClient.Gauge({
-          name: 'polkadot_validator_commission_state',
-          help: 'Whether a validator may have changed the commission rate recently',
+        this.stateUnexpectedPayee = new promClient.Gauge({
+          name: 'polkadot_validator_unexpected_payee_state',
+          help: 'Whether a validator has an unexpected payee destination',
+          labelNames: ['network', 'name', 'address']
+        });
+        this.commissionChangedReports = new promClient.Gauge({
+          name: 'polkadot_validator_commission_changed_reports',
+          help: 'Times a validator has changed the commission rate',
+          labelNames: ['network', 'name', 'address']
+        });
+        this.stateUnexpectedCommission = new promClient.Gauge({
+          name: 'polkadot_validator_unexpected_commission_state',
+          help: 'Whether a validator has an unexpected commission rate',
           labelNames: ['network', 'name', 'address']
         });
     }

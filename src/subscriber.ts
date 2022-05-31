@@ -1,8 +1,9 @@
 import { ApiPromise } from '@polkadot/api';
 import { Event } from '@polkadot/types/interfaces/system';
 import { Header, SessionIndex, ValidatorId, Address } from '@polkadot/types/interfaces';
+import { DeriveStakingQuery } from '@polkadot/api-derive/types';
 import { Tuple, Vec } from '@polkadot/types/codec';
-import { Logger } from '@w3f/logger';
+import { Logger, LoggerSingleton } from './logger';
 
 import {
     InputConfig,
@@ -18,19 +19,20 @@ export class Subscriber {
     private validatorActiveSet: Vec<ValidatorId>;
     private sessionIndex: SessionIndex;
 
+    private readonly logger: Logger = LoggerSingleton.getInstance()
+
     constructor(
         cfg: InputConfig,
         private readonly api: ApiPromise,
-        private readonly promClient: PromClient,
-        private readonly logger: Logger) {
+        private readonly promClient: PromClient) {
 
         this.validators = cfg.validators
-
     }
 
     public async start(): Promise<void> {
         
         await this._initInstanceVariables();
+        this._initCounterMetrics()
 
         await this._handleNewHeadSubscriptions();
         await this._subscribeEvents();
@@ -38,8 +40,7 @@ export class Subscriber {
 
     public triggerConnectivityTest(): void {
       const testAccountName = "CONNECTIVITY_TEST_NO_ACTION_REQUIRED"
-      this.promClient.increaseTotalValidatorOfflineReports(testAccountName,testAccountName);
-      setTimeout(()=>{this.promClient.resetTotalValidatorOfflineReports(testAccountName, testAccountName);},120000) //reset after 2 minutes
+      this.promClient.increaseOfflineReports(testAccountName,testAccountName);
     }
 
     private async _initInstanceVariables(): Promise<void>{
@@ -57,22 +58,36 @@ export class Subscriber {
     }
 
     private async _handleNewHeadSubscriptions(): Promise<void> {
-      this._initProducerMetrics();
-      this._initSessionOfflineMetrics();
-      this._initOutOfActiveSetMetrics();
-      this._initPayeeMetrics();
-      this._initCommissionMetrics();
-      
       this.api.rpc.chain.subscribeNewHeads(async (header) => {
         this._producerHandler(header);
         this._validatorStatusHandler(header);
         this._payeeChangeHandler(header);
         this._commissionChangeHandler(header);
+        this._checkUnexpected();
+      })
+    }
+
+    private async _checkUnexpected(): Promise<void> {
+      const tmp = await this.api.derive.staking.queryMulti(this.validators.map(v=>v.address),{withDestination:true,withPrefs:true})
+      const tmpMap = new Map<string,DeriveStakingQuery>()
+      tmp.forEach(t=>tmpMap.set(t.accountId.toString(),t))
+
+      this.validators.forEach(v => {
+        if(!v.expected?.commission || v.expected.commission == tmpMap.get(v.address).validatorPrefs.commission.toNumber()){
+          this.promClient.resetStatusValidatorCommissionUnexpected(v.name,v.address)
+        } else {
+          this.promClient.setStatusValidatorCommissionUnexpected(v.name,v.address)
+        }
+
+        if(!v.expected?.payee || v.expected.payee == tmpMap.get(v.address).rewardDestination.asAccount.toString()){
+          this.promClient.resetStatusValidatorPayeeUnexpected(v.name,v.address)
+        } else {
+          this.promClient.setStatusValidatorPayeeUnexpected(v.name,v.address)
+        }
       })
     }
 
     private async _subscribeEvents(): Promise<void> {
-      this._initTotalOfflineMetrics();
 
       this.api.query.system.events((events) => {
 
@@ -99,7 +114,7 @@ export class Subscriber {
           const account = this.validators.find((producer) => producer.address == author.toString());
           if (account) {
               this.logger.info(`New block produced by ${account.name}`);
-              this.promClient.increaseTotalBlocksProduced(account.name, account.address);
+              this.promClient.increaseBlocksProducedReports(account.name, account.address);
               
               //solve potential offline status
               this._solveOfflineStatus(account)
@@ -108,8 +123,7 @@ export class Subscriber {
     }
 
     private _solveOfflineStatus(account: Subscribable): void{
-      this.promClient.resetStatusValidatorOffline(account.name);
-      this.promClient.resetTotalValidatorOfflineReports(account.name, account.address);
+      this.promClient.resetStatusOfflineRisk(account.name);
     }
 
     private async _validatorStatusHandler(header: Header): Promise<void> {
@@ -120,11 +134,11 @@ export class Subscriber {
         const validatorActiveSetIndex = parameters.validatorActiveSet.indexOf(account.address)
         if ( validatorActiveSetIndex < 0 ) {
           this.logger.debug(`Target ${account.name} is not present in the validation active set of era ${parameters.eraIndex}`);
-          this.promClient.setStatusValidatorOutOfActiveSet(account.name);
+          this.promClient.setStatusOutOfActiveSet(account.name);
           this._solveOfflineStatus(account)
           return 
         }
-        this.promClient.resetStatusValidatorOutOfActiveSet(account.name);
+        this.promClient.resetStatusOutOfActiveSet(account.name);
 
         await this._checkValidatorOfflineStatus(parameters,account,validatorActiveSetIndex)
       }) 
@@ -160,7 +174,7 @@ export class Subscriber {
       for (const validator of this.validators) {
         if(signer.toString() == validator.address || signer.toString() == validator.controllerAddress){
           this.logger.info(`Found setPayee or bond extrinsic for validator ${validator.name}`)
-          this.promClient.setStatusValidatorPayeeChanged(validator.name, validator.address)
+          this.promClient.increasePayeeChangedReports(validator.name, validator.address)
         }
       }
     }
@@ -194,7 +208,7 @@ export class Subscriber {
       for (const validator of this.validators) {
         if(signer.toString() == validator.address || signer.toString() == validator.controllerAddress){
           this.logger.info(`Found validate extrinsic for validator ${validator.name}`)
-          this.promClient.setStatusValidatorCommissionChanged(validator.name, validator.address)
+          this.promClient.increaseCommissionChangedReports(validator.name, validator.address)
         }
       }
     }
@@ -207,11 +221,11 @@ export class Subscriber {
         }
         else {
           this.logger.info(`Target ${validator.name} has either not authored any block or sent any heartbeat yet in session:${parameters.sessionIndex}/era:${parameters.eraIndex}`);
-          this.promClient.setStatusValidatorOffline(validator.name);
+          this.promClient.setStatusOfflineRisk(validator.name);
         }
       }
-      else if ( this.promClient.isValidatorStatusOffline(validator.name) ) {
-        // first half of a session...
+      else if ( this.promClient.isOfflineRiskStatusFiring(validator.name) ) {
+        // first half of a subsequent session...
         if ( await hasValidatorProvedOnline(validator,validatorActiveSetIndex,parameters.sessionIndex,this.api) ){
           this._solveOfflineStatus(validator)
         }
@@ -229,7 +243,7 @@ export class Subscriber {
 
           if (account) {
               this.logger.info(`Really bad... Target ${account.name} found offline`);
-              this.promClient.increaseTotalValidatorOfflineReports(account.name, account.address);
+              this.promClient.increaseOfflineReports(account.name, account.address);
           }
       });
     }
@@ -272,51 +286,42 @@ export class Subscriber {
         return currentBlock.cmp(blockThreshold) > 0
     }
 
-    private _initProducerMetrics(): void {
+    private _initCounterMetrics(): void {
+      this._initBlocksProducedMetrics();
+      this._initOfflineReportsMetrics()
+      this._initPayeeChangedMetrics();
+      this._initCommissionChangedMetrics();
+    }
+
+    private _initBlocksProducedMetrics(): void {
       this.validators.forEach((account) => {
-        // always increase metric even the first time, so that we initialize the time serie
+        // always increase counters even the first time, so that we initialize the time series
         // https://github.com/prometheus/prometheus/issues/1673
-        this.promClient.initTotalBlocksProduced(account.name, account.address)
+        this.promClient.increaseBlocksProducedReports(account.name, account.address)
       });
     }
 
-    private _initSessionOfflineMetrics(): void {
+    private _initOfflineReportsMetrics(): void {
       this.validators.forEach((account) => {
-        // always increase metric even the first time, so that we initialize the time serie
+        // always increase counters even the first time, so that we initialize the time series
         // https://github.com/prometheus/prometheus/issues/1673
-        this.promClient.resetStatusValidatorOffline(account.name);
+        this.promClient.increaseOfflineReports(account.name, account.address);
       });
     }
 
-    private _initOutOfActiveSetMetrics(): void {
+    private _initPayeeChangedMetrics(): void {
       this.validators.forEach((account) => {
-        // always increase metric even the first time, so that we initialize the time serie
+        // always increase counters even the first time, so that we initialize the time series
         // https://github.com/prometheus/prometheus/issues/1673
-        this.promClient.resetStatusValidatorOutOfActiveSet(account.name);
+        this.promClient.increasePayeeChangedReports(account.name, account.address)
       });
     }
 
-    private _initTotalOfflineMetrics(): void {
+    private _initCommissionChangedMetrics(): void {
       this.validators.forEach((account) => {
-        // always increase metric even the first time, so that we initialize the time serie
+        // always increase counters even the first time, so that we initialize the time series
         // https://github.com/prometheus/prometheus/issues/1673
-        this.promClient.resetTotalValidatorOfflineReports(account.name, account.address);
-      });
-    }
-
-    private _initPayeeMetrics(): void {
-      this.validators.forEach((account) => {
-        // always increase metric even the first time, so that we initialize the time serie
-        // https://github.com/prometheus/prometheus/issues/1673
-        this.promClient.resetStatusValidatorPayeeChanged(account.name, account.address)
-      });
-    }
-
-    private _initCommissionMetrics(): void {
-      this.validators.forEach((account) => {
-        // always increase metric even the first time, so that we initialize the time serie
-        // https://github.com/prometheus/prometheus/issues/1673
-        this.promClient.resetStatusValidatorCommissionChanged(account.name, account.address)
+        this.promClient.increaseCommissionChangedReports(account.name, account.address)
       });
     }
 

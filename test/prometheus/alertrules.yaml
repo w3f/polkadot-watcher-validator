@@ -6,40 +6,40 @@ evaluation_interval: 1m
 tests:
     - interval: 1m
       input_series:
-          - series: 'polkadot_offline_validator_session_reports_state{name="node0"}'
+          - series: 'polkadot_validator_offline_risk_state{name="node0"}'
             values: '0 0 1+0x10 0 0' # 0 0 1 1 1 1 1 1 1 1 1 1 1 0 0
-          - series: 'polkadot_validator_out_of_active_set_reports_state{name="node0"}'
+          - series: 'polkadot_validator_out_of_active_set_state{name="node0"}'
             values: '0 0 1 1 1 0 0'       
-          - series: 'polkadot_validator_payee_state{network="kusama",name="node0",address="Gt6HqWBhdu4Sy1u8ASTbS1qf2Ac5gwdegwr8tWN8saMxPt5"}'
+          - series: 'polkadot_validator_payee_changed_reports{network="kusama",name="node0",address="Gt6HqWBhdu4Sy1u8ASTbS1qf2Ac5gwdegwr8tWN8saMxPt5"}'
             values: '0 0 1 1 1 0 0'
-          - series: 'polkadot_validator_commission_state{network="kusama",name="node0",address="Gt6HqWBhdu4Sy1u8ASTbS1qf2Ac5gwdegwr8tWN8saMxPt5"}'
+          - series: 'polkadot_validator_commission_changed_reports{network="kusama",name="node0",address="Gt6HqWBhdu4Sy1u8ASTbS1qf2Ac5gwdegwr8tWN8saMxPt5"}'
             values: '0 0 1 1 1 0 0'     
 
       alert_rule_test:
           # Test ValidatorOfflineSession alert
           - eval_time: 9m # Values: 0 0 1 1 
-            alertname: ValidatorOfflineSessionShort
+            alertname: ValidatorOfflineRiskShort
             exp_alerts:
           - eval_time: 10m # Values: 0 0 1 1 1 1 1 1 1 1
-            alertname: ValidatorOfflineSessionShort
+            alertname: ValidatorOfflineRiskShort
             exp_alerts:
                 - exp_labels:
                     severity: warning
                     origin: cluster
                     name: node0
                   exp_annotations:
-                      message: "Target node0 has either not authored any block or sent any heartbeat yet in this session" 
+                      message: "Target node0 has either not authored any block or sent any heartbeat yet in this session. It is risking to be caught offline" 
           - eval_time: 12m # Values: 0 0 1 1 1 1 1 1 1 1 1 1
-            alertname: ValidatorOfflineSessionLong
+            alertname: ValidatorOfflineRiskLong
             exp_alerts:
                 - exp_labels:
                     severity: critical
                     origin: cluster
                     name: node0
                   exp_annotations:
-                      message: "Target node0 has either not authored any block or sent any heartbeat yet in this session"                         
+                      message: "Target node0 has either not authored any block or sent any heartbeat yet in this session. It is risking to be caught offline"                         
           - eval_time: 13m # Values: 0 0 1 1 1 1 1 1 1 1 1 1 0        
-            alertname: ValidatorOfflineSessionLong
+            alertname: ValidatorOfflineRiskLong
             exp_alerts:   
            
             # Test ValidatorOutOfActiveSet alert
@@ -70,7 +70,7 @@ tests:
                   address: Gt6HqWBhdu4Sy1u8ASTbS1qf2Ac5gwdegwr8tWN8saMxPt5
                   network: kusama
                 exp_annotations:
-                    message: "Target [node0](https://kusama.subscan.io/validator/Gt6HqWBhdu4Sy1u8ASTbS1qf2Ac5gwdegwr8tWN8saMxPt5) may have changed his reward destination recently, please double check"
+                    message: "Target [node0](https://kusama.subscan.io/validator/Gt6HqWBhdu4Sy1u8ASTbS1qf2Ac5gwdegwr8tWN8saMxPt5) may have changed his reward destination recently, please double check. This message is going to RESOLVE by itself soon."
           - eval_time: 5m # Values: 0 0 1 1 1 0
             alertname: ValidatorRewardDestinationChanged
             exp_alerts:  
@@ -89,7 +89,7 @@ tests:
                   address: Gt6HqWBhdu4Sy1u8ASTbS1qf2Ac5gwdegwr8tWN8saMxPt5
                   network: kusama
                 exp_annotations:
-                    message: "Target [node0](https://kusama.subscan.io/validator/Gt6HqWBhdu4Sy1u8ASTbS1qf2Ac5gwdegwr8tWN8saMxPt5) may have changed his commission rate recently, please double check"
+                    message: "Target [node0](https://kusama.subscan.io/validator/Gt6HqWBhdu4Sy1u8ASTbS1qf2Ac5gwdegwr8tWN8saMxPt5) may have changed his commission rate recently, please double check. This message is going to RESOLVE by itself soon."
           - eval_time: 5m # Values: 0 0 1 1 1 0
             alertname: ValidatorCommissionRateChanged
             exp_alerts:                   

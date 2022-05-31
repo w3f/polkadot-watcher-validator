@@ -22,7 +22,7 @@ prometheusRules:
   labels:
     app: w3f
   origin: cluster  
-  heartbeat: true  
+  offlineRisk: true  
 
 resources:
   requests:
