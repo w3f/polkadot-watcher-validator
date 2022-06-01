@@ -140,7 +140,7 @@ export class Subscriber {
         }
         this.promClient.resetStatusOutOfActiveSet(account.name);
 
-        await this._checkValidatorOfflineStatus(parameters,account,validatorActiveSetIndex)
+        await this._checkValidatorOfflineRiskStatus(parameters,account,validatorActiveSetIndex)
       }) 
       
     }
@@ -170,7 +170,7 @@ export class Subscriber {
       })
     }
 
-    private _handlePayeeChangeDetection(signer: Address){
+    private _handlePayeeChangeDetection(signer: Address): void{
       for (const validator of this.validators) {
         if(signer.toString() == validator.address || signer.toString() == validator.controllerAddress){
           this.logger.info(`Found setPayee or bond extrinsic for validator ${validator.name}`)
@@ -204,7 +204,7 @@ export class Subscriber {
       })
     }
 
-    private _handleCommissionChangeDetection(signer: Address){
+    private _handleCommissionChangeDetection(signer: Address): void{
       for (const validator of this.validators) {
         if(signer.toString() == validator.address || signer.toString() == validator.controllerAddress){
           this.logger.info(`Found validate extrinsic for validator ${validator.name}`)
@@ -213,7 +213,7 @@ export class Subscriber {
       }
     }
 
-    private async _checkValidatorOfflineStatus(parameters: ValidatorImOnlineParameters,validator: Subscribable,validatorActiveSetIndex: number): Promise<void>{
+    private async _checkValidatorOfflineRiskStatus(parameters: ValidatorImOnlineParameters,validator: Subscribable,validatorActiveSetIndex: number): Promise<void>{
   
       if(parameters.isHeartbeatExpected) {
         if ( await hasValidatorProvedOnline(validator,validatorActiveSetIndex,parameters.sessionIndex,this.api) ) {
@@ -291,6 +291,13 @@ export class Subscriber {
       this._initOfflineReportsMetrics()
       this._initPayeeChangedMetrics();
       this._initCommissionChangedMetrics();
+      this._initOfflineRiskdMetrics(); //this metric need to be init
+    }
+
+    private _initOfflineRiskdMetrics(): void {
+      this.validators.forEach((account) => {
+        this.promClient.resetStatusOfflineRisk(account.name)
+      });
     }
 
     private _initBlocksProducedMetrics(): void {

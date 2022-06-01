@@ -12,7 +12,7 @@ export interface Subscribable {
     expected?: {
       commission?: number;
       payee?: string;  
-    }
+    };
 }
 
 export interface InputConfig {

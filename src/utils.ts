@@ -32,27 +32,6 @@ export async function asyncForEach<T>(array: Array<T>, callback: (arg0: T, arg1:
   }
 }
 
-export const firstBlockPreviousEra = async (api: ApiPromise): Promise<number> => {
-
-  const last = await api.rpc.chain.getHeader()
-  const deriveSessionProgress = await api.derive.session.progress();  
-  // we want to find a random block in the previous era
-  const blockInPreviousEra = last.number.unwrap().toNumber() - deriveSessionProgress.eraProgress.toNumber() - 100 
-
-  const hash = await api.rpc.chain.getBlockHash(blockInPreviousEra)
-  const [_,firstBlockPreviusEra] = await api.query.babe.epochStart.at(hash)
-  
-  return firstBlockPreviusEra.toNumber()
-}
-
-export const firstBlockCurrentEra = async (api: ApiPromise): Promise<number> => {
-
-  const hash = await api.rpc.chain.getBlockHash() 
-  const [_,firstBlockCurrentEra] = await api.query.babe.epochStart.at(hash)
-  
-  return firstBlockCurrentEra.toNumber()
-}
-
 const _hasValidatorAuthoredBlocks = async (validator: Subscribable, sessionIndex: SessionIndex, api: ApiPromise): Promise<boolean> => {
   const numBlocksAuthored = await api.query.imOnline.authoredBlocks(sessionIndex,validator.address)
   return numBlocksAuthored.cmp(ZeroBN) > 0
