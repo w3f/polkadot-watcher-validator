@@ -291,7 +291,7 @@ export class Subscriber {
       this._initOfflineReportsMetrics()
       this._initPayeeChangedMetrics();
       this._initCommissionChangedMetrics();
-      this._initOfflineRiskdMetrics(); //this metric need to be init
+      this._initOfflineRiskdMetrics(); //this metric needs to be init
     }
 
     private _initOfflineRiskdMetrics(): void {

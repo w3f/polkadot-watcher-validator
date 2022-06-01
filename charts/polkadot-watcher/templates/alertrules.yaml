@@ -31,7 +31,7 @@ spec:
       annotations:
         message: '{{`{{ $labels.name }}`}} was reported offline, check https://{{`{{ $labels.network }}`}}.subscan.io/event?address=&module=imonline&event=someoffline for details. Check his account for eventul slahes: https://{{`{{ $labels.network }}`}}.subscan.io/account/{{`{{ $labels.address }}`}}?tab=reward. This message is going to RESOLVE by itself soon.'
         runbook_url: "https://github.com/w3f/infrastructure/wiki/Validator-Offline"
-      expr: increase(polkadot_validator_offline_reports[10m]) > 0
+      expr: increase(polkadot_validator_offline_reports[5m]) > 0
       for: 30s
       labels:
         severity: critical
@@ -65,7 +65,7 @@ spec:
     - alert: ValidatorRewardDestinationChanged
       annotations:
         message: 'Target [{{`{{ $labels.name }}`}}](https://{{`{{ $labels.network }}`}}.subscan.io/validator/{{`{{ $labels.address }}`}}) may have changed his reward destination recently, please double check. This message is going to RESOLVE by itself soon.'
-      expr: increase(polkadot_validator_payee_changed_reports[10m]) > 0
+      expr: increase(polkadot_validator_payee_changed_reports[5m]) > 0
       for: 30s
       labels:
         severity: warning
@@ -73,7 +73,7 @@ spec:
     - alert: ValidatorCommissionRateChanged
       annotations:
         message: 'Target [{{`{{ $labels.name }}`}}](https://{{`{{ $labels.network }}`}}.subscan.io/validator/{{`{{ $labels.address }}`}}) may have changed his commission rate recently, please double check. This message is going to RESOLVE by itself soon.'
-      expr: increase(polkadot_validator_commission_changed_reports[10m]) > 0
+      expr: increase(polkadot_validator_commission_changed_reports[5m]) > 0
       for: 30s
       labels:
         severity: warning
