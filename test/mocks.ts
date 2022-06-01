@@ -4,70 +4,81 @@
 import { PromClient } from "../src/types";
 
 
-export class PrometheusMock implements PromClient {
-    
-    private _totalBlocksProduced = 0;
-    private _totalValidatorOfflineReports = 0;
-    private _stateValidatorOffline = 0;
-    private _stateValidatorOutOfActiveSet = 0;
-    private _stateValidatorPayeeReports = 0;
-    private _stateValidatorCommissionReports = 0;
+export class PrometheusMock implements PromClient {    
+    private _blocksProducedReports = 0; 
+    private _offlineReports = 0; 
+    private _stateOfflineRisk = 0;
+    private _stateOutOfActiveSet = 0;
+    private _payeeChangedReports = 0; 
+    private _commissionChangedReports = 0;
+    private _statePayeeUnexpected = 0;
+    private _stateCommissionUnexpected = 0;
 
-    increaseTotalBlocksProduced(name: string, address: string): void {
-        this._totalBlocksProduced++;
-    }
-
-    initTotalBlocksProduced(name: string, address: string): void {
-      this._totalBlocksProduced = 0;
+    increaseBlocksProducedReports(name: string, address: string): void {
+        this._blocksProducedReports++;
     }
     
-    increaseTotalValidatorOfflineReports(name: string, address: string): void { }
-    resetTotalValidatorOfflineReports(name: string, address: string): void { }
+    increaseOfflineReports(name: string, address: string): void {
+      this._offlineReports++;
+     }
 
-    setStatusValidatorOffline(name: string): void {
-      this._stateValidatorOffline = 1
+    setStatusOfflineRisk(name: string): void {
+      this._stateOfflineRisk = 1
     }
-    resetStatusValidatorOffline(name: string): void {
-      this._stateValidatorOffline = 0
+    resetStatusOfflineRisk(name: string): void {
+      this._stateOfflineRisk = 0
     }
-    isValidatorStatusOffline(name: string): boolean {return false}
+    isOfflineRiskStatusFiring(name: string): boolean {return false}
 
-    setStatusValidatorOutOfActiveSet(name: string): void {
-      this._stateValidatorOutOfActiveSet = 1
+    setStatusOutOfActiveSet(name: string): void {
+      this._stateOutOfActiveSet = 1
     }
-    resetStatusValidatorOutOfActiveSet(name: string): void {
-      this._stateValidatorOutOfActiveSet = 0
+    resetStatusOutOfActiveSet(name: string): void {
+      this._stateOutOfActiveSet = 0
     }
-    setStatusValidatorPayeeChanged(name: string, address: string): void {
-      this._stateValidatorPayeeReports = 1;
+    increasePayeeChangedReports(name: string, address: string): void {
+      this._payeeChangedReports++;
     }
-    resetStatusValidatorPayeeChanged(name: string, address: string): void {
-      this._stateValidatorPayeeReports = 0;
-    }
-    setStatusValidatorCommissionChanged(name: string, address: string): void {
-      this._stateValidatorCommissionReports = 1;
-    }
-    resetStatusValidatorCommissionChanged(name: string, address: string): void {
-      this._stateValidatorCommissionReports = 0;
+    increaseCommissionChangedReports(name: string, address: string): void {
+      this._commissionChangedReports++;
     }
 
+    setStatusValidatorPayeeUnexpected(name: string): void {
+      this._statePayeeUnexpected = 1
+    }
+    resetStatusValidatorPayeeUnexpected(name: string): void {
+      this._statePayeeUnexpected = 0
+    }
+    setStatusValidatorCommissionUnexpected(name: string): void {
+      this._stateCommissionUnexpected = 1
+    }
+    resetStatusValidatorCommissionUnexpected(name: string): void {
+      this._stateCommissionUnexpected = 0
+    }
 
-    get totalBlocksProduced(): number {
-        return this._totalBlocksProduced;
+
+    get blocksProducedReports(): number {
+        return this._blocksProducedReports;
     }
-    get totalValidatorOfflineReports(): number {
-      return this._totalValidatorOfflineReports;
+    get offlineReports(): number {
+      return this._offlineReports;
     }
-    get statusValidatorOffline(): number {
-      return this._stateValidatorOffline;
+    get statusOfflineRisk(): number {
+      return this._stateOfflineRisk;
     }
-    get statusValidatorOutOfActiveSet(): number {
-      return this._stateValidatorOutOfActiveSet;
+    get statusOutOfActiveSet(): number {
+      return this._stateOutOfActiveSet;
     }
-    get statusValidatorPayeeChanged(): number {
-      return this._stateValidatorPayeeReports;
+    get payeeChangedReports(): number {
+      return this._payeeChangedReports;
     }
-    get statusValidatorCommissionChanged(): number {
-      return this._stateValidatorCommissionReports;
+    get commissionChangedReports(): number {
+      return this._commissionChangedReports;
+    }
+    get statusPayeeUnexpected(): number {
+      return this._statePayeeUnexpected;
+    }
+    get statusCommissionUnexpected(): number {
+      return this._stateCommissionUnexpected;
     }
 }
