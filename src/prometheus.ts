@@ -8,16 +8,16 @@ export class Prometheus implements PromClient {
 
     static readonly nameOfflineRiskMetric  = 'polkadot_validator_offline_risk_state';
 
-    private blocksProducedReports: promClient.Counter;
-    private offlineReports: promClient.Counter;
-    private stateOfflineRisk: promClient.Gauge;
-    private stateOutOfActiveSet: promClient.Gauge;
+    private blocksProducedReports: promClient.Counter<"network" | "name" | "address">;
+    private offlineReports: promClient.Counter<"network" | "name" | "address">;
+    private stateOfflineRisk: promClient.Gauge<"network" | "name" >;
+    private stateOutOfActiveSet: promClient.Gauge<"network" | "name" >;
     
-    private payeeChangedReports: promClient.Counter;
-    private stateUnexpectedPayee: promClient.Gauge;
+    private payeeChangedReports: promClient.Counter<"network" | "name" | "address">;
+    private stateUnexpectedPayee: promClient.Gauge<"network" | "name" | "address">;
 
-    private commissionChangedReports: promClient.Counter;
-    private stateUnexpectedCommission: promClient.Gauge;
+    private commissionChangedReports: promClient.Counter<"network" | "name" | "address">;
+    private stateUnexpectedCommission: promClient.Gauge<"network" | "name" | "address">;
 
     private readonly logger: Logger = LoggerSingleton.getInstance()
 
@@ -33,9 +33,9 @@ export class Prometheus implements PromClient {
     }
 
     injectMetricsRoute(app: express.Application): void {
-        app.get('/metrics', (req: express.Request, res: express.Response) => {
+        app.get('/metrics', async (req: express.Request, res: express.Response) => {
             res.set('Content-Type', register.contentType)
-            res.end(register.metrics())
+            res.end(await register.metrics())
         })
     }
 
@@ -56,7 +56,12 @@ export class Prometheus implements PromClient {
     }
 
     isOfflineRiskStatusFiring(name: string): boolean {
-      return promClient.register.getSingleMetric(Prometheus.nameOfflineRiskMetric)['hashMap'][`name:${name},network:${this.network}`]['value'] === 1
+      try {
+        return promClient.register.getSingleMetric(Prometheus.nameOfflineRiskMetric)['hashMap'][`name:${name},network:${this.network}`]['value'] == 1
+      } catch (error) {
+        this.resetStatusOfflineRisk(name)
+        return promClient.register.getSingleMetric(Prometheus.nameOfflineRiskMetric)['hashMap'][`name:${name},network:${this.network}`]['value'] == 1
+      }
     }
 
     setStatusOutOfActiveSet(name: string): void{

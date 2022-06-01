@@ -291,13 +291,6 @@ export class Subscriber {
       this._initOfflineReportsMetrics()
       this._initPayeeChangedMetrics();
       this._initCommissionChangedMetrics();
-      this._initOfflineRiskdMetrics(); //this metric needs to be init
-    }
-
-    private _initOfflineRiskdMetrics(): void {
-      this.validators.forEach((account) => {
-        this.promClient.resetStatusOfflineRisk(account.name)
-      });
     }
 
     private _initBlocksProducedMetrics(): void {
