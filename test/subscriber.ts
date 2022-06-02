@@ -46,7 +46,7 @@ const cfg3 = {
         name: 'Alice',
         address: 'GsvVmjr1CBHwQHw84pPHMDxgNY3iBLz6Qn7qS3CH8qPhrHz',
         expected: {
-            commission: 10,
+            commission: 17,
             payee: 'FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP'
         }    
     }]
