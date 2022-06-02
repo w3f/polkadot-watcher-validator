@@ -219,12 +219,6 @@ describe('Subscriber cfg3, with a started network', async () => {
             it('should detected an unexpected behaviour...', async () => {
                 await delay(6000);
 
-                prometheus.blocksProducedReports.should.be.gt(1); //counters are init to 1 
-                prometheus.offlineReports.should.be.eq(1) //counters are init to 1 
-                prometheus.statusOfflineRisk.should.be.eq(0)
-                prometheus.statusOutOfActiveSet.should.be.eq(0)
-                prometheus.payeeChangedReports.should.be.eq(1) //counters are init to 1 
-                prometheus.commissionChangedReports.should.be.eq(1) //counters are init to 1 
                 prometheus.statusCommissionUnexpected.should.be.eq(1)
                 prometheus.statusPayeeUnexpected.should.be.eq(1)
             });
@@ -232,23 +226,30 @@ describe('Subscriber cfg3, with a started network', async () => {
             it('should detect an expected payee resolution...', async () => {
                 await delay(6000);
 
+                const current = prometheus.payeeChangedReports
+
                 const call = testRPC.api().tx.staking.setPayee({Account: cfg3.validators[0].expected.payee})
                 await call.signAndSend(alice)
 
                 await delay(6000);
 
                 prometheus.statusPayeeUnexpected.should.be.eq(0)
+                prometheus.payeeChangedReports.should.be.eq(current+1)
             });
 
             it('should detect an expected commission resolution...', async () => {
                 await delay(6000);
+
+                const current = prometheus.commissionChangedReports
 
                 const call = testRPC.api().tx.staking.validate({commission: cfg3.validators[0].expected.commission})
                 await call.signAndSend(alice)
 
                 await delay(6000);
 
+                
                 prometheus.statusCommissionUnexpected.should.be.eq(0)
+                prometheus.commissionChangedReports.should.be.eq(current+1)
             });
         });
 
