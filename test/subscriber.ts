@@ -38,6 +38,20 @@ const cfg2 = {
   }]
 };
 
+const cfg3 = {
+    logLevel: 'info',
+    port: 3000,
+    endpoint: 'some_endpoint',
+    validators: [{
+        name: 'Alice',
+        address: 'GsvVmjr1CBHwQHw84pPHMDxgNY3iBLz6Qn7qS3CH8qPhrHz',
+        expected: {
+            commission: 10,
+            payee: 'FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP'
+        }    
+    }]
+};
+
 LoggerSingleton.setInstance("info")
 
 function delay(ms: number): Promise<void> {
@@ -80,6 +94,8 @@ describe('Subscriber cfg1, with a started network', async () => {
                 prometheus.statusOutOfActiveSet.should.be.eq(0)
                 prometheus.payeeChangedReports.should.be.eq(1) //counters are init to 1 
                 prometheus.commissionChangedReports.should.be.eq(1) //counters are init to 1 
+                prometheus.statusCommissionUnexpected.should.be.eq(0)
+                prometheus.statusPayeeUnexpected.should.be.eq(0)
             });
 
             it('should detect a payee change attempt...', async () => {
@@ -177,4 +193,64 @@ describe('Subscriber cfg2, with a started network', () => {
           });
       });
   });
+});
+
+describe('Subscriber cfg3, with a started network', async () => {
+    const testRPC = new TestPolkadotRPC();
+    const prometheus = new PrometheusMock();
+    let subject: Subscriber;
+    before(async () => {
+        await testRPC.start();
+        cfg3.endpoint = testRPC.endpoint()
+        const api = await new Client(cfg3).connect()
+        subject = new Subscriber(cfg3, api, prometheus);
+    });
+
+    after(async () => {
+        await testRPC.stop();
+    });
+
+    describe('with an started instance', () => {
+        before(async () => {
+            await subject.start();
+        });
+
+        describe('validator status', async () => {
+            it('should detected an unexpected behaviour...', async () => {
+                await delay(6000);
+
+                prometheus.blocksProducedReports.should.be.gt(1); //counters are init to 1 
+                prometheus.offlineReports.should.be.eq(1) //counters are init to 1 
+                prometheus.statusOfflineRisk.should.be.eq(0)
+                prometheus.statusOutOfActiveSet.should.be.eq(0)
+                prometheus.payeeChangedReports.should.be.eq(1) //counters are init to 1 
+                prometheus.commissionChangedReports.should.be.eq(1) //counters are init to 1 
+                prometheus.statusCommissionUnexpected.should.be.eq(1)
+                prometheus.statusPayeeUnexpected.should.be.eq(1)
+            });
+
+            it('should detect an expected payee resolution...', async () => {
+                await delay(6000);
+
+                const call = testRPC.api().tx.staking.setPayee({Account: cfg3.validators[0].expected.payee})
+                await call.signAndSend(alice)
+
+                await delay(6000);
+
+                prometheus.statusPayeeUnexpected.should.be.eq(0)
+            });
+
+            it('should detect an expected commission resolution...', async () => {
+                await delay(6000);
+
+                const call = testRPC.api().tx.staking.validate({commission: cfg3.validators[0].expected.commission})
+                await call.signAndSend(alice)
+
+                await delay(6000);
+
+                prometheus.statusCommissionUnexpected.should.be.eq(0)
+            });
+        });
+
+    });
 });
