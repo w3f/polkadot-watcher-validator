@@ -69,20 +69,24 @@ export class Subscriber {
 
     private async _checkUnexpected(): Promise<void> {
       const tmp = await this.api.derive.staking.queryMulti(this.validators.map(v=>v.address),{withDestination:true,withPrefs:true})
-      const tmpMap = new Map<string,DeriveStakingQuery>()
-      tmp.forEach(t=>tmpMap.set(t.accountId.toString(),t))
+      const stakingMap = new Map<string,DeriveStakingQuery>()
+      tmp.forEach(t=>stakingMap.set(t.accountId.toString(),t))
 
       this.validators.forEach(v => {
-        if(!v.expected?.commission || v.expected.commission == tmpMap.get(v.address).validatorPrefs.commission.toNumber()){
+        const actualCommission = stakingMap.get(v.address).validatorPrefs.commission.toNumber()
+        if(!v.expected?.commission || v.expected.commission == actualCommission){
           this.promClient.resetStatusValidatorCommissionUnexpected(v.name,v.address)
         } else {
+          this.logger.info(`Detected Unexpected commission for validator ${v.name}: expected ${v.expected.commission}, actual ${actualCommission}`)
           this.promClient.setStatusValidatorCommissionUnexpected(v.name,v.address)
         }
 
-        if(!v.expected?.payee || v.expected.payee == tmpMap.get(v.address).rewardDestination.asAccount.toString()){
-          this.promClient.resetStatusValidatorPayeeUnexpected(v.name,v.address)
-        } else {
+        const actualRewardDestination = stakingMap.get(v.address).rewardDestination
+        if(v.expected?.payee && (!actualRewardDestination.isAccount || v.expected.payee != actualRewardDestination.asAccount.toString())){
+          this.logger.info(`Detected Unexpected payee for validator ${v.name}: expected ${v.expected.payee}, actual ${JSON.stringify(actualRewardDestination)}`)
           this.promClient.setStatusValidatorPayeeUnexpected(v.name,v.address)
+        } else {
+          this.promClient.resetStatusValidatorPayeeUnexpected(v.name,v.address)
         }
       })
     }
