@@ -16,6 +16,7 @@ export class PrometheusMock implements PromClient {
 
     increaseBlocksProducedReports(name: string, address: string): void {
         this._blocksProducedReports++;
+        this.resetStatusOfflineRisk(name) //solve potential risk status
     }
     
     increaseOfflineReports(name: string, address: string): void {
@@ -28,10 +29,11 @@ export class PrometheusMock implements PromClient {
     resetStatusOfflineRisk(name: string): void {
       this._stateOfflineRisk = 0
     }
-    isOfflineRiskStatusFiring(name: string): boolean {return false}
+    isStatusOfflineRiskFiring(name: string): boolean {return false}
 
     setStatusOutOfActiveSet(name: string): void {
       this._stateOutOfActiveSet = 1
+      this.resetStatusOfflineRisk(name) //solve potential risk status
     }
     resetStatusOutOfActiveSet(name: string): void {
       this._stateOutOfActiveSet = 0

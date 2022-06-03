@@ -27,7 +27,7 @@ export interface PromClient {
     increaseOfflineReports(name: string, address: string): void;
     setStatusOfflineRisk(name: string): void;
     resetStatusOfflineRisk(name: string): void;
-    isOfflineRiskStatusFiring(name: string): boolean;
+    isStatusOfflineRiskFiring(name: string): boolean;
     setStatusOutOfActiveSet(name: string): void;
     resetStatusOutOfActiveSet(name: string): void;
     increasePayeeChangedReports(name: string, address: string): void;

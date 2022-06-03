@@ -1,5 +1,3 @@
-import * as express from 'express';
-import { register } from 'prom-client';
 import * as promClient from 'prom-client';
 import { Logger, LoggerSingleton } from './logger';
 import { PromClient } from './types';
@@ -32,15 +30,9 @@ export class Prometheus implements PromClient {
         promClient.collectDefaultMetrics();
     }
 
-    injectMetricsRoute(app: express.Application): void {
-        app.get('/metrics', async (req: express.Request, res: express.Response) => {
-            res.set('Content-Type', register.contentType)
-            res.end(await register.metrics())
-        })
-    }
-
     increaseBlocksProducedReports(name: string, address: string): void {
         this.blocksProducedReports.inc({network:this.network, name, address })
+        this.resetStatusOfflineRisk(name) //solve potential risk status
     }
 
     increaseOfflineReports(name: string, address: string): void {
@@ -55,7 +47,7 @@ export class Prometheus implements PromClient {
         this.stateOfflineRisk.set({network:this.network, name }, 0);
     }
 
-    isOfflineRiskStatusFiring(name: string): boolean {
+    isStatusOfflineRiskFiring(name: string): boolean {
       try {
         return promClient.register.getSingleMetric(Prometheus.nameOfflineRiskMetric)['hashMap'][`name:${name},network:${this.network}`]['value'] == 1
       } catch (error) {
@@ -65,7 +57,8 @@ export class Prometheus implements PromClient {
     }
 
     setStatusOutOfActiveSet(name: string): void{
-      this.stateOutOfActiveSet.set({network:this.network, name }, 1);        
+      this.stateOutOfActiveSet.set({network:this.network, name }, 1);
+      this.resetStatusOfflineRisk(name) //solve potential risk status
     }
 
     resetStatusOutOfActiveSet(name: string): void{

@@ -1,7 +1,7 @@
 import express from 'express';
 import { LoggerSingleton } from '../logger'
 import { Config } from '@w3f/config';
-
+import { register } from 'prom-client';
 import { Subscriber } from '../subscriber';
 import { Prometheus } from '../prometheus';
 import { InputConfig } from '../types';
@@ -24,6 +24,10 @@ export async function startAction(cmd): Promise<void> {
         async (req: express.Request, res: express.Response): Promise<void> => {
             res.status(200).send('OK!')
         })
+    server.get('/metrics', async (req: express.Request, res: express.Response) => {
+            res.set('Content-Type', register.contentType)
+            res.end(await register.metrics())
+        })    
     server.listen(cfg.port);
 
     LoggerSingleton.setInstance(cfg.logLevel)
@@ -33,7 +37,6 @@ export async function startAction(cmd): Promise<void> {
     const networkId = chain.toString().toLowerCase()
 
     const promClient = new Prometheus(networkId);
-    promClient.injectMetricsRoute(server);
     promClient.startCollection();
 
     const subscriber = new Subscriber(cfg, api, promClient);

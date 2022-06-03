@@ -3,7 +3,7 @@ import { Event } from '@polkadot/types/interfaces/system';
 import { Header, SessionIndex, ValidatorId, Address } from '@polkadot/types/interfaces';
 import { DeriveStakingQuery } from '@polkadot/api-derive/types';
 import { Tuple, Vec } from '@polkadot/types/codec';
-import { Logger, LoggerSingleton } from './logger';
+import { LoggerSingleton } from './logger';
 
 import {
     InputConfig,
@@ -11,7 +11,7 @@ import {
     PromClient,
     ValidatorImOnlineParameters
 } from './types';
-import { getActiveEraIndex, getHeartbeatBlockThreshold, hasValidatorProvedOnline, isNewSessionEvent, isOfflineEvent } from './utils';
+import { getActiveEraIndex, isHeadAfterHeartbeatBlockThreshold, hasValidatorProvedOnline, isNewSessionEvent, isOfflineEvent } from './utils';
 
 export class Subscriber {
     private validators: Array<Subscribable>;
@@ -19,7 +19,7 @@ export class Subscriber {
     private validatorActiveSet: Vec<ValidatorId>;
     private sessionIndex: SessionIndex;
 
-    private readonly logger: Logger = LoggerSingleton.getInstance()
+    private readonly logger = LoggerSingleton.getInstance()
 
     constructor(
         cfg: InputConfig,
@@ -119,15 +119,8 @@ export class Subscriber {
           if (account) {
               this.logger.info(`New block produced by ${account.name}`);
               this.promClient.increaseBlocksProducedReports(account.name, account.address);
-              
-              //solve potential offline status
-              this._solveOfflineStatus(account)
           }
       }
-    }
-
-    private _solveOfflineStatus(account: Subscribable): void{
-      this.promClient.resetStatusOfflineRisk(account.name);
     }
 
     private async _validatorStatusHandler(header: Header): Promise<void> {
@@ -139,12 +132,10 @@ export class Subscriber {
         if ( validatorActiveSetIndex < 0 ) {
           this.logger.debug(`Target ${account.name} is not present in the validation active set of era ${parameters.eraIndex}`);
           this.promClient.setStatusOutOfActiveSet(account.name);
-          this._solveOfflineStatus(account)
-          return 
+        } else {
+          this.promClient.resetStatusOutOfActiveSet(account.name);
+          await this._checkOfflineRiskStatus(parameters,account,validatorActiveSetIndex)
         }
-        this.promClient.resetStatusOutOfActiveSet(account.name);
-
-        await this._checkValidatorOfflineRiskStatus(parameters,account,validatorActiveSetIndex)
       }) 
       
     }
@@ -217,24 +208,15 @@ export class Subscriber {
       }
     }
 
-    private async _checkValidatorOfflineRiskStatus(parameters: ValidatorImOnlineParameters,validator: Subscribable,validatorActiveSetIndex: number): Promise<void>{
-  
-      if(parameters.isHeartbeatExpected) {
-        if ( await hasValidatorProvedOnline(validator,validatorActiveSetIndex,parameters.sessionIndex,this.api) ) {
-          this._solveOfflineStatus(validator)
-        }
-        else {
-          this.logger.info(`Target ${validator.name} has either not authored any block or sent any heartbeat yet in session:${parameters.sessionIndex}/era:${parameters.eraIndex}`);
-          this.promClient.setStatusOfflineRisk(validator.name);
-        }
+    private async _checkOfflineRiskStatus(parameters: ValidatorImOnlineParameters,validator: Subscribable,validatorActiveSetIndex: number): Promise<void>{
+      if ( await hasValidatorProvedOnline(validator,validatorActiveSetIndex,parameters.sessionIndex,this.api) ) {
+        this.promClient.resetStatusOfflineRisk(validator.name);
+      } else if(parameters.isHeartbeatExpected) {
+        this.logger.info(`Target ${validator.name} has either not authored any block or sent any heartbeat yet in session:${parameters.sessionIndex}/era:${parameters.eraIndex}`);
+        this.promClient.setStatusOfflineRisk(validator.name);
       }
-      else if ( this.promClient.isOfflineRiskStatusFiring(validator.name) ) {
-        // first half of a subsequent session...
-        if ( await hasValidatorProvedOnline(validator,validatorActiveSetIndex,parameters.sessionIndex,this.api) ){
-          this._solveOfflineStatus(validator)
-        }
-      }
-      
+      // else let it be as it is.
+      // with this solution, if a validator has been caught offline, it will eventually remain in a risk status also for the first half of the subsequent session.
     }
 
     private _offlineEventHandler(event: Event): void {
@@ -273,7 +255,7 @@ export class Subscriber {
       const eraIndex = this.currentEraIndex
       const validatorActiveSet = this.validatorActiveSet
       this.logger.debug(`Current EraIndex: ${eraIndex}\tCurrent SessionIndex: ${sessionIndex}`);
-      const isHeartbeatExpected = await this._isHeadAfterHeartbeatBlockThreshold(header)
+      const isHeartbeatExpected = await isHeadAfterHeartbeatBlockThreshold(this.api,header)
 
       return {
         isHeartbeatExpected,
@@ -281,13 +263,6 @@ export class Subscriber {
         eraIndex,
         validatorActiveSet
       } 
-    }
-
-    private async _isHeadAfterHeartbeatBlockThreshold(header: Header): Promise<boolean> {
-        const currentBlock = header.number.toBn()
-        const blockThreshold = await getHeartbeatBlockThreshold(this.api)
-        this.logger.debug(`Current Block: ${currentBlock}\tHeartbeatBlock Threshold: ${blockThreshold}`);
-        return currentBlock.cmp(blockThreshold) > 0
     }
 
     private _initCounterMetrics(): void {
