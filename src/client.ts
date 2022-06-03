@@ -1,5 +1,5 @@
 import { ApiPromise, WsProvider } from '@polkadot/api';
-import { Logger } from '@w3f/logger';
+import { LoggerSingleton, Logger } from './logger';
 
 import {
     InputConfig,
@@ -8,10 +8,9 @@ import {
 export class Client {
     private api: ApiPromise;
     private endpoint: string;
+    private readonly logger: Logger = LoggerSingleton.getInstance()
 
-    constructor(
-        cfg: InputConfig,
-        private readonly logger: Logger) {
+    constructor(cfg: InputConfig) {
         this.endpoint = cfg.endpoint;
     }
 

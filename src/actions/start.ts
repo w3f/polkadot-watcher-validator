@@ -1,7 +1,7 @@
 import express from 'express';
-import { createLogger } from '@w3f/logger';
+import { LoggerSingleton } from '../logger'
 import { Config } from '@w3f/config';
-
+import { register } from 'prom-client';
 import { Subscriber } from '../subscriber';
 import { Prometheus } from '../prometheus';
 import { InputConfig } from '../types';
@@ -24,19 +24,22 @@ export async function startAction(cmd): Promise<void> {
         async (req: express.Request, res: express.Response): Promise<void> => {
             res.status(200).send('OK!')
         })
+    server.get('/metrics', async (req: express.Request, res: express.Response) => {
+            res.set('Content-Type', register.contentType)
+            res.end(await register.metrics())
+        })    
     server.listen(cfg.port);
 
-    const logger = createLogger(cfg.logLevel);
-
-    const api = await new Client(cfg,logger).connect()
+    LoggerSingleton.setInstance(cfg.logLevel)
+    
+    const api = await new Client(cfg).connect()
     const chain = await api.rpc.system.chain()
     const networkId = chain.toString().toLowerCase()
 
-    const promClient = new Prometheus(networkId,logger);
-    promClient.injectMetricsRoute(server);
+    const promClient = new Prometheus(networkId);
     promClient.startCollection();
 
-    const subscriber = new Subscriber(cfg, api, promClient, logger);
+    const subscriber = new Subscriber(cfg, api, promClient);
     await subscriber.start();
 
     _addTestEndpoint(server,subscriber)

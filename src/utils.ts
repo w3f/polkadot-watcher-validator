@@ -2,9 +2,12 @@
 
 import { ApiPromise } from '@polkadot/api';
 import { Event } from '@polkadot/types/interfaces/system';
-import { SessionIndex, BlockNumber } from '@polkadot/types/interfaces';
+import { SessionIndex, Header } from '@polkadot/types/interfaces';
 import { Subscribable } from './types';
 import { ZeroBN } from './constants';
+import { LoggerSingleton } from './logger';
+
+const logger = LoggerSingleton.getInstance()
 
 export const isNewSessionEvent = (event: Event): boolean => {
   return event.section == 'session' && event.method == 'NewSession';
@@ -22,35 +25,17 @@ export const getActiveEraIndex = async (api: ApiPromise): Promise<number> => {
   return (await api.query.staking.activeEra()).toJSON()['index']; 
 }
 
-export const getHeartbeatBlockThreshold = async (api: ApiPromise): Promise<BlockNumber> => {
-  return api.query.imOnline.heartbeatAfter()
+export const isHeadAfterHeartbeatBlockThreshold = async (api: ApiPromise, header: Header): Promise<boolean> => {
+  const currentBlock = header.number.toBn()
+  const blockThreshold = await api.query.imOnline.heartbeatAfter() //threshold after which an heartbeat is expected
+  logger.debug(`Current Block: ${currentBlock}\tHeartbeatBlock Threshold: ${blockThreshold}`);
+  return currentBlock.cmp(blockThreshold) > 0
 }
 
 export async function asyncForEach<T>(array: Array<T>, callback: (arg0: T, arg1: number, arg2: Array<T>) => void): Promise<void> {
   for (let index = 0; index < array.length; index++) {
       await callback(array[index], index, array);
   }
-}
-
-export const firstBlockPreviousEra = async (api: ApiPromise): Promise<number> => {
-
-  const last = await api.rpc.chain.getHeader()
-  const deriveSessionProgress = await api.derive.session.progress();  
-  // we want to find a random block in the previous era
-  const blockInPreviousEra = last.number.unwrap().toNumber() - deriveSessionProgress.eraProgress.toNumber() - 100 
-
-  const hash = await api.rpc.chain.getBlockHash(blockInPreviousEra)
-  const [_,firstBlockPreviusEra] = await api.query.babe.epochStart.at(hash)
-  
-  return firstBlockPreviusEra.toNumber()
-}
-
-export const firstBlockCurrentEra = async (api: ApiPromise): Promise<number> => {
-
-  const hash = await api.rpc.chain.getBlockHash() 
-  const [_,firstBlockCurrentEra] = await api.query.babe.epochStart.at(hash)
-  
-  return firstBlockCurrentEra.toNumber()
 }
 
 const _hasValidatorAuthoredBlocks = async (validator: Subscribable, sessionIndex: SessionIndex, api: ApiPromise): Promise<boolean> => {

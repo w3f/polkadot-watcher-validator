@@ -29,7 +29,14 @@ It can then monitor the status of the node, leveraging on mechanisms such as the
 - An Active validator is risking to be caught offline, please act ASAP
 - A validator is not seleceted by Phragmen alorithm to be part of the active set
 - A validator has changed his payout address destination
-- A validator has changed his commission rate 
+- A validator has an unexpected payout address destination
+- A validator has changed his commission rate
+- A validator has an unexpected commission rate
+
+#### Unexpected payout address destination
+
+Possible Payout Destination Types are `'Staked' | 'Stash' | 'Controller' | 'Account' | 'None'`.  
+If an expected destination address is specified in the config file, it is implicit that you are expecting a type `'Account'` to be matched.
 
 ### Resources
 

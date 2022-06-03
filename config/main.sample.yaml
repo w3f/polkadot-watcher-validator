@@ -4,3 +4,6 @@ logLevel: info
 validators:
 - name: test
   address: Gt6HqWBhdu4Sy1u8ASTbS1qf2Ac5gwdegwr8tWN8saMxPt5
+  expected: #optional
+    commission: 0.17 #optional
+    payee: Gt6HqWBhdu4Sy1u8ASTbS1qf2Ac5gwdegwr8tWN8saMxPt5 #optional
