@@ -20,7 +20,7 @@
     "start": "node ./dist/index.js start"
   },
   "dependencies": {
-    "@polkadot/api": "^8.6.2",
+    "@polkadot/api": "^8.10.1",
     "@w3f/config": "^0.1.1",
     "@w3f/logger": "^0.4.2",
     "commander": "^4.0.0",
