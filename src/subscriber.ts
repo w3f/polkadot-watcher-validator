@@ -74,7 +74,7 @@ export class Subscriber {
 
       this.validators.forEach(v => {
         const actualCommission = stakingMap.get(v.address).validatorPrefs.commission.toNumber() //expressed in ppb
-        if(!v.expected?.commission || v.expected.commission*10000000 == actualCommission){ //ppb to percentage conversion
+        if(!v.expected?.commission || v.expected.commission*10000000 == actualCommission){ //percentage to ppb conversion
           this.promClient.resetStatusValidatorCommissionUnexpected(v.name,v.address)
         } else {
           this.logger.info(`Detected Unexpected commission for validator ${v.name}: expected percentage ${v.expected.commission}, actual in ppb ${actualCommission}`)

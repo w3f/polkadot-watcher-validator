@@ -128,7 +128,7 @@ describe('Subscriber cfg1, with a started network', async () => {
 
                 const current = prometheus.commissionChangedReports
 
-                const call = testRPC.api().tx.staking.validate({commission: 10}) 
+                const call = testRPC.api().tx.staking.validate({commission: 100000000}) //10 percent in ppb
                 await call.signAndSend(alice)
 
                 await delay(6000);
@@ -242,7 +242,7 @@ describe('Subscriber cfg3, with a started network', async () => {
 
                 const current = prometheus.commissionChangedReports
 
-                const call = testRPC.api().tx.staking.validate({commission: cfg3.validators[0].expected.commission})
+                const call = testRPC.api().tx.staking.validate({commission: cfg3.validators[0].expected.commission*10000000}) //percentage to ppb conversion
                 await call.signAndSend(alice)
 
                 await delay(6000);
