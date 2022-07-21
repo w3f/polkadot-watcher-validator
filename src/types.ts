@@ -25,11 +25,11 @@ export interface InputConfig {
 export interface PromClient {
     increaseBlocksProducedReports(name: string, address: string): void;
     increaseOfflineReports(name: string, address: string): void;
-    setStatusOfflineRisk(name: string): void;
-    resetStatusOfflineRisk(name: string): void;
-    isStatusOfflineRiskFiring(name: string): boolean;
-    setStatusOutOfActiveSet(name: string): void;
-    resetStatusOutOfActiveSet(name: string): void;
+    setStatusOfflineRisk(name: string, address: string): void;
+    resetStatusOfflineRisk(name: string, address: string): void;
+    isStatusOfflineRiskFiring(name: string, address: string): boolean;
+    setStatusOutOfActiveSet(name: string, address: string): void;
+    resetStatusOutOfActiveSet(name: string, address: string): void;
     increasePayeeChangedReports(name: string, address: string): void;
     increaseCommissionChangedReports(name: string, address: string): void;
     setStatusValidatorPayeeUnexpected(name: string, address: string): void;
