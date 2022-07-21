@@ -8,8 +8,8 @@ export class Prometheus implements PromClient {
 
     private blocksProducedReports: promClient.Counter<"network" | "name" | "address">;
     private offlineReports: promClient.Counter<"network" | "name" | "address">;
-    private stateOfflineRisk: promClient.Gauge<"network" | "name" >;
-    private stateOutOfActiveSet: promClient.Gauge<"network" | "name" >;
+    private stateOfflineRisk: promClient.Gauge<"network" | "name" | "address">;
+    private stateOutOfActiveSet: promClient.Gauge<"network" | "name" | "address">;
     
     private payeeChangedReports: promClient.Counter<"network" | "name" | "address">;
     private stateUnexpectedPayee: promClient.Gauge<"network" | "name" | "address">;
@@ -32,37 +32,37 @@ export class Prometheus implements PromClient {
 
     increaseBlocksProducedReports(name: string, address: string): void {
         this.blocksProducedReports.inc({network:this.network, name, address })
-        this.resetStatusOfflineRisk(name) //solve potential risk status
+        this.resetStatusOfflineRisk(name, address) //solve potential risk status
     }
 
     increaseOfflineReports(name: string, address: string): void {
         this.offlineReports.inc({network:this.network, name, address });
     }
 
-    setStatusOfflineRisk(name: string): void {
+    setStatusOfflineRisk(name: string, address: string): void {
         this.stateOfflineRisk.set({network:this.network, name }, 1);        
     }
 
-    resetStatusOfflineRisk(name: string): void {
+    resetStatusOfflineRisk(name: string, address: string): void {
         this.stateOfflineRisk.set({network:this.network, name }, 0);
     }
 
-    isStatusOfflineRiskFiring(name: string): boolean {
+    isStatusOfflineRiskFiring(name: string, address: string): boolean {
       try {
-        return promClient.register.getSingleMetric(Prometheus.nameOfflineRiskMetric)['hashMap'][`name:${name},network:${this.network}`]['value'] == 1
+        return promClient.register.getSingleMetric(Prometheus.nameOfflineRiskMetric)['hashMap'][`name:${name},network:${this.network},address:${address}`]['value'] == 1
       } catch (error) {
-        this.resetStatusOfflineRisk(name)
-        return promClient.register.getSingleMetric(Prometheus.nameOfflineRiskMetric)['hashMap'][`name:${name},network:${this.network}`]['value'] == 1
+        this.resetStatusOfflineRisk(name, address)
+        return promClient.register.getSingleMetric(Prometheus.nameOfflineRiskMetric)['hashMap'][`name:${name},network:${this.network},address:${address}`]['value'] == 1
       }
     }
 
-    setStatusOutOfActiveSet(name: string): void{
-      this.stateOutOfActiveSet.set({network:this.network, name }, 1);
-      this.resetStatusOfflineRisk(name) //solve potential risk status
+    setStatusOutOfActiveSet(name: string, address: string): void{
+      this.stateOutOfActiveSet.set({network:this.network, name, address }, 1);
+      this.resetStatusOfflineRisk(name,address) //solve potential risk status
     }
 
-    resetStatusOutOfActiveSet(name: string): void{
-      this.stateOutOfActiveSet.set({network:this.network, name }, 0);        
+    resetStatusOutOfActiveSet(name: string, address: string): void{
+      this.stateOutOfActiveSet.set({network:this.network, name, address }, 0);        
     }
 
     increasePayeeChangedReports(name: string, address: string): void{
@@ -103,12 +103,12 @@ export class Prometheus implements PromClient {
         this.stateOfflineRisk = new promClient.Gauge({
             name: Prometheus.nameOfflineRiskMetric,
             help: 'Whether a validator has not produced a block and neither has sent an expected heartbeat yet. It is risking to be caught offline',
-            labelNames: ['network', 'name']
+            labelNames: ['network', 'name', 'address']
         });
         this.stateOutOfActiveSet = new promClient.Gauge({
           name: 'polkadot_validator_out_of_active_set_state',
           help: 'Whether a validator is reported as outside of the current Era validators active set',
-          labelNames: ['network', 'name']
+          labelNames: ['network', 'name', 'address']
         });
         this.payeeChangedReports = new promClient.Gauge({
           name: 'polkadot_validator_payee_changed_reports',

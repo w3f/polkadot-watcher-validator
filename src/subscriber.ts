@@ -131,9 +131,9 @@ export class Subscriber {
         const validatorActiveSetIndex = parameters.validatorActiveSet.indexOf(account.address)
         if ( validatorActiveSetIndex < 0 ) {
           this.logger.debug(`Target ${account.name} is not present in the validation active set of era ${parameters.eraIndex}`);
-          this.promClient.setStatusOutOfActiveSet(account.name);
+          this.promClient.setStatusOutOfActiveSet(account.name,account.address);
         } else {
-          this.promClient.resetStatusOutOfActiveSet(account.name);
+          this.promClient.resetStatusOutOfActiveSet(account.name,account.address);
           await this._checkOfflineRiskStatus(parameters,account,validatorActiveSetIndex)
         }
       }) 
@@ -210,10 +210,10 @@ export class Subscriber {
 
     private async _checkOfflineRiskStatus(parameters: ValidatorImOnlineParameters,validator: Subscribable,validatorActiveSetIndex: number): Promise<void>{
       if ( await hasValidatorProvedOnline(validator,validatorActiveSetIndex,parameters.sessionIndex,this.api) ) {
-        this.promClient.resetStatusOfflineRisk(validator.name);
+        this.promClient.resetStatusOfflineRisk(validator.name,validator.address);
       } else if(parameters.isHeartbeatExpected) {
         this.logger.info(`Target ${validator.name} has either not authored any block or sent any heartbeat yet in session:${parameters.sessionIndex}/era:${parameters.eraIndex}`);
-        this.promClient.setStatusOfflineRisk(validator.name);
+        this.promClient.setStatusOfflineRisk(validator.name,validator.address);
       }
       // else let it be as it is.
       // with this solution, if a validator has been caught offline, it will eventually remain in a risk status also for the first half of the subsequent session.

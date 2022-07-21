@@ -11,7 +11,7 @@ spec:
     rules:
     - alert: ProducerStallShort
       annotations:
-        message: 'Blocks were not produced for 1 hour by {{`{{ $labels.name }}`}}'
+        message: 'Blocks were not produced for 1 hour by [{{`{{ $labels.name }}`}}]({{`{{ $labels.address }}`}})'
         runbook_url: "https://github.com/w3f/infrastructure/wiki/Producer-Stall"
       expr: increase(polkadot_validator_blocks_produced[10m]) == 0 and polkadot_validator_out_of_active_set_state == 0
       for: 60m
@@ -20,7 +20,7 @@ spec:
         origin: {{ .Values.prometheusRules.origin }}
     - alert: ProducerStallLong
       annotations:
-        message: 'Blocks were not produced for 3 hours by {{`{{ $labels.name }}`}}'
+        message: 'Blocks were not produced for 3 hours by [{{`{{ $labels.name }}`}}]({{`{{ $labels.address }}`}})'
         runbook_url: "https://github.com/w3f/infrastructure/wiki/Producer-Stall"
       expr: increase(polkadot_validator_blocks_produced[10m]) == 0 and polkadot_validator_out_of_active_set_state == 0
       for: 180m
@@ -29,7 +29,7 @@ spec:
         origin: {{ .Values.prometheusRules.origin }}
     - alert: ValidatorOffline
       annotations:
-        message: '{{`{{ $labels.name }}`}} was reported offline, check https://{{`{{ $labels.network }}`}}.subscan.io/event?address=&module=imonline&event=someoffline for details. Check his account for eventul slahes: https://{{`{{ $labels.network }}`}}.subscan.io/account/{{`{{ $labels.address }}`}}?tab=reward. This message is going to RESOLVE by itself soon.'
+        message: 'Target [{{`{{ $labels.name }}`}}](https://{{`{{ $labels.network }}`}}.subscan.io/validator/{{`{{ $labels.address }}`}}) was reported offline, an advanced double check can be carried [here](https://{{`{{ $labels.network }}`}}.subscan.io/event?address=&module=imonline&event=someoffline). Check the account for eventual [slashes](https://{{`{{ $labels.network }}`}}.subscan.io/account/{{`{{ $labels.address }}`}}?tab=reward). This message is going to RESOLVE by itself soon.'
         runbook_url: "https://github.com/w3f/infrastructure/wiki/Validator-Offline"
       expr: increase(polkadot_validator_offline_reports[5m]) > 0
       for: 30s
@@ -39,7 +39,7 @@ spec:
     {{ if ne .Values.prometheusRules.offlineRisk false }}
     - alert: ValidatorOfflineRiskLong
       annotations:
-        message: 'Target {{`{{ $labels.name }}`}} has either not authored any block or sent any heartbeat yet in this session. It is risking to be caught offline'
+        message: 'Target [{{`{{ $labels.name }}`}}](https://{{`{{ $labels.network }}`}}.subscan.io/validator/{{`{{ $labels.address }}`}}) has either not authored any block or sent any heartbeat yet in this session. It is risking to be caught offline'
       expr: polkadot_validator_offline_risk_state > 0
       for: 10m
       labels:
@@ -47,7 +47,7 @@ spec:
         origin: {{ .Values.prometheusRules.origin }}        
     - alert: ValidatorOfflineRiskShort
       annotations:
-        message: 'Target {{`{{ $labels.name }}`}} has either not authored any block or sent any heartbeat yet in this session. It is risking to be caught offline'
+        message: 'Target [{{`{{ $labels.name }}`}}](https://{{`{{ $labels.network }}`}}.subscan.io/validator/{{`{{ $labels.address }}`}}) has either not authored any block or sent any heartbeat yet in this session. It is risking to be caught offline'
       expr: polkadot_validator_offline_risk_state > 0
       for: 8m
       labels:
@@ -56,7 +56,7 @@ spec:
     {{ end }}    
     - alert: ValidatorOutOfActiveSet
       annotations:
-        message: 'Target {{`{{ $labels.name }}`}} is not present in the current validation active set because it has not been selected by Phragmen'
+        message: 'Target [{{`{{ $labels.name }}`}}](https://{{`{{ $labels.network }}`}}.subscan.io/account/{{`{{ $labels.address }}`}}) is not present in the current validation active set because it has not been selected by Phragmen'
       expr: polkadot_validator_out_of_active_set_state > 0
       for: 2m
       labels:
