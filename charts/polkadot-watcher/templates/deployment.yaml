@@ -28,14 +28,14 @@ spec:
         - /app/config/main.yaml
         ports:
         - name: metrics
-          containerPort: {{ .Values.port }}
+          containerPort: {{ .Values.config.port }}
         livenessProbe:
           httpGet:
             path: /healthcheck
-            port: {{ .Values.port }}
+            port: {{ .Values.config.port }}
           initialDelaySeconds: 10
           timeoutSeconds: 200
-        {{ if ne .Values.environment "ci" }}
+        {{ if ne .Values.config.environment "ci" }}
         resources:
           {{- toYaml .Values.resources | nindent 10 }}
         {{ end }}

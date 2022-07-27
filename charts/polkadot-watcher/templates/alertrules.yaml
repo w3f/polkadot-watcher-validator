@@ -1,4 +1,4 @@
-{{ if and .Values.prometheusRules.enabled ( ne .Values.environment "ci" ) }}
+{{ if and .Values.prometheusRules.enabled ( ne .Values.config.environment "ci" ) }}
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:

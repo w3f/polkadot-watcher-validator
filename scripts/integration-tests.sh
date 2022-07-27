@@ -20,7 +20,7 @@ main(){
     fi
 
     /scripts/build-helm.sh \
-        --set environment=ci \
+        --set config.environment=ci \
         --set image.tag="${CIRCLE_SHA1}" \
         polkadot-watcher \
         ./charts/polkadot-watcher
