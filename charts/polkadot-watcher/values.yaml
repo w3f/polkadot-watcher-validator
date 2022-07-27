@@ -22,7 +22,8 @@ prometheusRules:
   labels:
     app: w3f
   origin: cluster  
-  offlineRisk: true  
+  offlineRisk: true 
+  producerStall: true 
 
 resources:
   requests:

@@ -9,6 +9,7 @@ spec:
   groups:
   - name: {{ .Release.Name }}.rules
     rules:
+    {{ if ne .Values.prometheusRules.producerStall false }}
     - alert: ProducerStallShort
       annotations:
         message: 'Blocks were not produced for 1 hour by <a href="https://{{`{{ $labels.network }}`}}.subscan.io/account/{{`{{ $labels.address }}`}}">{{`{{ $labels.name }}`}}</a>'
@@ -27,6 +28,7 @@ spec:
       labels:
         severity: critical
         origin: {{ .Values.prometheusRules.origin }}
+    {{ end }}    
     - alert: ValidatorOffline
       annotations:
         message: 'Target <a href="https://{{`{{ $labels.network }}`}}.subscan.io/validator/{{`{{ $labels.address }}`}}">{{`{{ $labels.name }}`}}</a> was reported offline, an advanced double check can be carried <a href="https://{{`{{ $labels.network }}`}}.subscan.io/event?address=&module=imonline&event=someoffline">here</a>. Check the account for eventual <a href="https://{{`{{ $labels.network }}`}}.subscan.io/account/{{`{{ $labels.address }}`}}?tab=reward">slashes</a>. This message is going to RESOLVE by itself soon.'
