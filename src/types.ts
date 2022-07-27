@@ -1,10 +1,6 @@
 import { SessionIndex, ValidatorId } from '@polkadot/types/interfaces';
 import { Vec } from '@polkadot/types/codec';
 
-export interface MatrixbotConfig {
-    endpoint: string;
-}
-
 export interface Subscribable {
     name: string;
     address: string;
@@ -17,6 +13,7 @@ export interface Subscribable {
 
 export interface InputConfig {
     logLevel: string;
+    environment: string;
     port: number;
     endpoint: string;
     validators: Array<Subscribable>;

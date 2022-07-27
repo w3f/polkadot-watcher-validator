@@ -6,6 +6,7 @@ import { Subscriber } from '../subscriber';
 import { Prometheus } from '../prometheus';
 import { InputConfig } from '../types';
 import { Client } from '../client';
+import { environment } from '../constants';
 
 const _addTestEndpoint = (server: express.Application, subscriber: Subscriber): void =>{
  
@@ -35,8 +36,9 @@ export async function startAction(cmd): Promise<void> {
     const api = await new Client(cfg).connect()
     const chain = await api.rpc.system.chain()
     const networkId = chain.toString().toLowerCase()
+    const env = cfg.environment ? cfg.environment : environment
 
-    const promClient = new Prometheus(networkId);
+    const promClient = new Prometheus(networkId,env);
     promClient.startCollection();
 
     const subscriber = new Subscriber(cfg, api, promClient);

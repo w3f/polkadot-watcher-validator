@@ -9,6 +9,7 @@ config:
   endpoint: "wss://kusama-rpc.polkadot.io"
   port: 3000
   logLevel: info
+  environment: production #it is used to filter the prometheusrules, i.e. to avoid conflicts between production and staging
   validators: []
 
 serviceMonitor:
