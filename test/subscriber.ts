@@ -22,6 +22,7 @@ const cfg = {
     logLevel: 'info',
     port: 3000,
     endpoint: 'some_endpoint',
+    environment: 'test',
     validators: [{
         name: 'Alice',
         address: 'GsvVmjr1CBHwQHw84pPHMDxgNY3iBLz6Qn7qS3CH8qPhrHz'
@@ -32,6 +33,7 @@ const cfg2 = {
   logLevel: 'info',
   port: 3000,
   endpoint: 'some_endpoint',
+  environment: 'test',
   validators: [{
       name: 'NotActiveAccount',
       address: 'FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP'
@@ -42,6 +44,7 @@ const cfg3 = {
     logLevel: 'info',
     port: 3000,
     endpoint: 'some_endpoint',
+    environment: 'test',
     validators: [{
         name: 'Alice',
         address: 'GsvVmjr1CBHwQHw84pPHMDxgNY3iBLz6Qn7qS3CH8qPhrHz',

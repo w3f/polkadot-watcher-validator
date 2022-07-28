@@ -1,6 +1,3 @@
-environment: production
-port: 3000
-
 image:
   repo: web3f/polkadot-watcher
   # tag: latest
@@ -9,6 +6,7 @@ config:
   endpoint: "wss://kusama-rpc.polkadot.io"
   port: 3000
   logLevel: info
+  environment: production #it is used also to filter the prometheusrules, i.e. to avoid conflicts between production and staging
   validators: []
 
 serviceMonitor:
@@ -22,7 +20,8 @@ prometheusRules:
   labels:
     app: w3f
   origin: cluster  
-  offlineRisk: true  
+  offlineRisk: true 
+  producerStall: true 
 
 resources:
   requests:
