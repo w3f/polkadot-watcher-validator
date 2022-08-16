@@ -1,3 +1,10 @@
+# max by(container,network,address,name) is the primary key which all the metrics are aggregated by to avoid alerts flapping: i.e. when a K8s pod restarts 
+# The same result could be achieved by applying max without(instance,pod)
+# --
+# last_over_time is used to avoid alerts flapping when the alert is firing and the alert disappear, to override and extend the default endsAt behaviour: i.e. when the watcher takes a while to restart
+# --
+# All the queries are also filtered by the "environment" label: i.e. to not mix metrics coming from staging and production environments
+
 {{ if and .Values.prometheusRules.enabled ( ne .Values.config.environment "ci" ) }}
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
@@ -9,12 +16,20 @@ spec:
   groups:
   - name: {{ .Release.Name }}.rules
     rules:
+    - alert: ValidatorOutOfActiveSet
+      annotations:
+        message: 'Target <a href="https://{{`{{ $labels.network }}`}}.subscan.io/account/{{`{{ $labels.address }}`}}">{{`{{ $labels.name }}`}}</a> is not present in the current validation active set because it has not been selected by Phragmen'
+      expr: max by(container,network,address,name) (last_over_time(polkadot_validator_out_of_active_set_state{environment="{{ .Values.config.environment }}"}[10m])) > 0
+      for: 2m
+      labels:
+        severity: info
+        origin: {{ .Values.prometheusRules.origin }}    
     {{ if ne .Values.prometheusRules.producerStall false }}
     - alert: ProducerStallShort
       annotations:
         message: 'Blocks were not produced for 1 hour by <a href="https://{{`{{ $labels.network }}`}}.subscan.io/account/{{`{{ $labels.address }}`}}">{{`{{ $labels.name }}`}}</a>'
         runbook_url: "https://github.com/w3f/infrastructure/wiki/Producer-Stall"
-      expr: increase(polkadot_validator_blocks_produced{environment="{{ .Values.config.environment }}"}[10m]) == 0 and polkadot_validator_out_of_active_set_state{environment="{{ .Values.config.environment }}"} == 0
+      expr: max by(container,network,address,name) (increase(polkadot_validator_blocks_produced{environment="{{ .Values.config.environment }}"}[10m])) == 0 and max by(container,network,address,name) (last_over_time(polkadot_validator_out_of_active_set_state{environment="{{ .Values.config.environment }}"}[10m])) == 0
       for: 60m
       labels:
         severity: warning
@@ -23,7 +38,7 @@ spec:
       annotations:
         message: 'Blocks were not produced for 3 hours by <a href="https://{{`{{ $labels.network }}`}}.subscan.io/account/{{`{{ $labels.address }}`}}">{{`{{ $labels.name }}`}}</a>'
         runbook_url: "https://github.com/w3f/infrastructure/wiki/Producer-Stall"
-      expr: increase(polkadot_validator_blocks_produced{environment="{{ .Values.config.environment }}"}[10m]) == 0 and polkadot_validator_out_of_active_set_state{environment="{{ .Values.config.environment }}"} == 0
+      expr: max by(container,network,address,name) (increase(polkadot_validator_blocks_produced{environment="{{ .Values.config.environment }}"}[10m])) == 0 and max by(container,network,address,name) (last_over_time(polkadot_validator_out_of_active_set_state{environment="{{ .Values.config.environment }}"}[10m])) == 0
       for: 180m
       labels:
         severity: critical
@@ -33,7 +48,7 @@ spec:
       annotations:
         message: 'Target <a href="https://{{`{{ $labels.network }}`}}.subscan.io/validator/{{`{{ $labels.address }}`}}">{{`{{ $labels.name }}`}}</a> was reported offline, an advanced double check can be carried <a href="https://{{`{{ $labels.network }}`}}.subscan.io/event?address=&module=imonline&event=someoffline">here</a>. Check the account for eventual <a href="https://{{`{{ $labels.network }}`}}.subscan.io/account/{{`{{ $labels.address }}`}}?tab=reward">slashes</a>. This message is going to RESOLVE by itself soon.'
         runbook_url: "https://github.com/w3f/infrastructure/wiki/Validator-Offline"
-      expr: increase(polkadot_validator_offline_reports{environment="{{ .Values.config.environment }}"}[5m]) > 0
+      expr: max by(container,network,address,name) (increase(polkadot_validator_offline_reports{environment="{{ .Values.config.environment }}"}[5m])) > 0
       for: 30s
       labels:
         severity: critical
@@ -42,7 +57,7 @@ spec:
     - alert: ValidatorOfflineRiskLong
       annotations:
         message: 'Target <a href="https://{{`{{ $labels.network }}`}}.subscan.io/validator/{{`{{ $labels.address }}`}}">{{`{{ $labels.name }}`}}</a> has either not authored any block or sent any heartbeat yet in this session. It is risking to be caught offline'
-      expr: polkadot_validator_offline_risk_state{environment="{{ .Values.config.environment }}"} > 0
+      expr: max by(container,network,address,name) (last_over_time(polkadot_validator_offline_risk_state{environment="{{ .Values.config.environment }}"}[10m])) > 0
       for: 10m
       labels:
         severity: critical
@@ -50,24 +65,16 @@ spec:
     - alert: ValidatorOfflineRiskShort
       annotations:
         message: 'Target <a href="https://{{`{{ $labels.network }}`}}.subscan.io/validator/{{`{{ $labels.address }}`}}">{{`{{ $labels.name }}`}}</a> has either not authored any block or sent any heartbeat yet in this session. It is risking to be caught offline'
-      expr: polkadot_validator_offline_risk_state{environment="{{ .Values.config.environment }}"} > 0
+      expr: max by(container,network,address,name) (last_over_time(polkadot_validator_offline_risk_state{environment="{{ .Values.config.environment }}"}[10m])) > 0
       for: 8m
       labels:
         severity: warning
         origin: {{ .Values.prometheusRules.origin }} 
     {{ end }}    
-    - alert: ValidatorOutOfActiveSet
-      annotations:
-        message: 'Target <a href="https://{{`{{ $labels.network }}`}}.subscan.io/account/{{`{{ $labels.address }}`}}">{{`{{ $labels.name }}`}}</a> is not present in the current validation active set because it has not been selected by Phragmen'
-      expr: polkadot_validator_out_of_active_set_state{environment="{{ .Values.config.environment }}"} > 0
-      for: 2m
-      labels:
-        severity: info
-        origin: {{ .Values.prometheusRules.origin }}
     - alert: ValidatorRewardDestinationChanged
       annotations:
         message: 'Target <a href="https://{{`{{ $labels.network }}`}}.subscan.io/validator/{{`{{ $labels.address }}`}}">{{`{{ $labels.name }}`}}</a> may have changed his reward destination recently, please double check. This message is going to RESOLVE by itself soon.'
-      expr: increase(polkadot_validator_payee_changed_reports{environment="{{ .Values.config.environment }}"}[5m]) > 0
+      expr: max by(container,network,address,name) (increase(polkadot_validator_payee_changed_reports{environment="{{ .Values.config.environment }}"}[5m])) > 0
       for: 30s
       labels:
         severity: warning
@@ -75,7 +82,7 @@ spec:
     - alert: ValidatorCommissionRateChanged
       annotations:
         message: 'Target <a href="https://{{`{{ $labels.network }}`}}.subscan.io/validator/{{`{{ $labels.address }}`}}">{{`{{ $labels.name }}`}}</a> may have changed his commission rate recently, please double check. This message is going to RESOLVE by itself soon.'
-      expr: increase(polkadot_validator_commission_changed_reports{environment="{{ .Values.config.environment }}"}[5m]) > 0
+      expr: max by(container,network,address,name) (increase(polkadot_validator_commission_changed_reports{environment="{{ .Values.config.environment }}"}[5m])) > 0
       for: 30s
       labels:
         severity: warning
@@ -83,7 +90,7 @@ spec:
     - alert: ValidatorCommissionRateUnexpected
       annotations:
         message: 'Target <a href="https://{{`{{ $labels.network }}`}}.subscan.io/validator/{{`{{ $labels.address }}`}}">{{`{{ $labels.name }}`}}</a> has an unexpected commission rate, please double check.'
-      expr: polkadot_validator_unexpected_commission_state{environment="{{ .Values.config.environment }}"} > 0
+      expr: max by(container,network,address,name) (last_over_time(polkadot_validator_unexpected_commission_state{environment="{{ .Values.config.environment }}"}[10m])) > 0
       for: 1m
       labels:
         severity: warning
@@ -91,7 +98,7 @@ spec:
     - alert: ValidatorRewardDestinationUnexpected
       annotations:
         message: 'Target <a href="https://{{`{{ $labels.network }}`}}.subscan.io/validator/{{`{{ $labels.address }}`}}">{{`{{ $labels.name }}`}}</a> has an unexpected reward destination, please double check.'
-      expr: polkadot_validator_unexpected_payee_state{environment="{{ .Values.config.environment }}"} > 0
+      expr: max by(container,network,address,name) (last_over_time(polkadot_validator_unexpected_payee_state{environment="{{ .Values.config.environment }}"}[10m])) > 0
       for: 1m
       labels:
         severity: warning

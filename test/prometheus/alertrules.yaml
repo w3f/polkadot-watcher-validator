@@ -9,13 +9,15 @@ tests:
           - series: 'polkadot_validator_offline_risk_state{network="kusama",name="node0",address="Gt6HqWBhdu4Sy1u8ASTbS1qf2Ac5gwdegwr8tWN8saMxPt5",environment="production"}'
             values: '0 0 1+0x10 0 0' # 0 0 1 1 1 1 1 1 1 1 1 1 1 0 0
           - series: 'polkadot_validator_out_of_active_set_state{network="kusama",name="node0",address="Gt6HqWBhdu4Sy1u8ASTbS1qf2Ac5gwdegwr8tWN8saMxPt5",environment="production"}'
-            values: '0 0 1 1 1 0 0'       
+            values: '0 0 1 1 1 0 0+0x190 1+0x20'       
           - series: 'polkadot_validator_payee_changed_reports{network="kusama",name="node0",address="Gt6HqWBhdu4Sy1u8ASTbS1qf2Ac5gwdegwr8tWN8saMxPt5",environment="production"}'
             values: '0 0 1 1 1 1 1'
           - series: 'polkadot_validator_commission_changed_reports{network="kusama",name="node0",address="Gt6HqWBhdu4Sy1u8ASTbS1qf2Ac5gwdegwr8tWN8saMxPt5",environment="production"}'
             values: '0 0 1 1 1 1 1'     
           - series: 'polkadot_validator_offline_reports{network="kusama",name="node0",address="Gt6HqWBhdu4Sy1u8ASTbS1qf2Ac5gwdegwr8tWN8saMxPt5",environment="production"}'
             values: '0 1 0 0 0 0 0'  
+          - series: 'polkadot_validator_blocks_produced{network="kusama",name="node0",address="Gt6HqWBhdu4Sy1u8ASTbS1qf2Ac5gwdegwr8tWN8saMxPt5",environment="production"}'
+            values: '1 1+0x190' # more than 3 hour  
 
       alert_rule_test:
           # Test ValidatorOfflineSession alert
@@ -31,7 +33,6 @@ tests:
                     name: node0
                     address: Gt6HqWBhdu4Sy1u8ASTbS1qf2Ac5gwdegwr8tWN8saMxPt5
                     network: kusama
-                    environment: production
                   exp_annotations:
                       message: 'Target <a href="https://kusama.subscan.io/validator/Gt6HqWBhdu4Sy1u8ASTbS1qf2Ac5gwdegwr8tWN8saMxPt5">node0</a> has either not authored any block or sent any heartbeat yet in this session. It is risking to be caught offline'
           - eval_time: 12m # Values: 0 0 1 1 1 1 1 1 1 1 1 1
@@ -43,7 +44,6 @@ tests:
                     name: node0
                     network: kusama
                     address: Gt6HqWBhdu4Sy1u8ASTbS1qf2Ac5gwdegwr8tWN8saMxPt5
-                    environment: production
                   exp_annotations:
                       message: 'Target <a href="https://kusama.subscan.io/validator/Gt6HqWBhdu4Sy1u8ASTbS1qf2Ac5gwdegwr8tWN8saMxPt5">node0</a> has either not authored any block or sent any heartbeat yet in this session. It is risking to be caught offline'                         
           - eval_time: 13m # Values: 0 0 1 1 1 1 1 1 1 1 1 1 0        
@@ -63,7 +63,6 @@ tests:
                   name: node0
                   address: Gt6HqWBhdu4Sy1u8ASTbS1qf2Ac5gwdegwr8tWN8saMxPt5
                   network: kusama
-                  environment: production
                 exp_annotations:
                     message: 'Target <a href="https://kusama.subscan.io/account/Gt6HqWBhdu4Sy1u8ASTbS1qf2Ac5gwdegwr8tWN8saMxPt5">node0</a> is not present in the current validation active set because it has not been selected by Phragmen'
 
@@ -80,7 +79,6 @@ tests:
                   name: node0
                   address: Gt6HqWBhdu4Sy1u8ASTbS1qf2Ac5gwdegwr8tWN8saMxPt5
                   network: kusama
-                  environment: production
                 exp_annotations:
                     message: 'Target <a href="https://kusama.subscan.io/validator/Gt6HqWBhdu4Sy1u8ASTbS1qf2Ac5gwdegwr8tWN8saMxPt5">node0</a> may have changed his reward destination recently, please double check. This message is going to RESOLVE by itself soon.'
           - eval_time: 7m # Values: 0 0 1 1 1 1 1
@@ -100,7 +98,6 @@ tests:
                   name: node0
                   address: Gt6HqWBhdu4Sy1u8ASTbS1qf2Ac5gwdegwr8tWN8saMxPt5
                   network: kusama
-                  environment: production
                 exp_annotations:
                     message: 'Target <a href="https://kusama.subscan.io/validator/Gt6HqWBhdu4Sy1u8ASTbS1qf2Ac5gwdegwr8tWN8saMxPt5">node0</a> may have changed his commission rate recently, please double check. This message is going to RESOLVE by itself soon.'
           - eval_time: 7m # Values: 0 0 1 1 1 1 1
@@ -120,11 +117,60 @@ tests:
                   name: node0
                   address: Gt6HqWBhdu4Sy1u8ASTbS1qf2Ac5gwdegwr8tWN8saMxPt5
                   network: kusama
-                  environment: production
                 exp_annotations:
                     message: 'Target <a href="https://kusama.subscan.io/validator/Gt6HqWBhdu4Sy1u8ASTbS1qf2Ac5gwdegwr8tWN8saMxPt5">node0</a> was reported offline, an advanced double check can be carried <a href="https://kusama.subscan.io/event?address=&module=imonline&event=someoffline">here</a>. Check the account for eventual <a href="https://kusama.subscan.io/account/Gt6HqWBhdu4Sy1u8ASTbS1qf2Ac5gwdegwr8tWN8saMxPt5?tab=reward">slashes</a>. This message is going to RESOLVE by itself soon.'
                     runbook_url: "https://github.com/w3f/infrastructure/wiki/Validator-Offline"
           - eval_time: 6m # Values: 0 1 0 0 0 0
             alertname: ValidatorOffline
             exp_alerts:                   
-                           
+
+            # Test ProducerStallX alert
+          - eval_time: 5m
+            alertname: ProducerStallShort
+            exp_alerts:
+          - eval_time: 5m
+            alertname: ProducerStallLong
+            exp_alerts:  
+          - eval_time: 65m 
+            alertname: ProducerStallShort
+            exp_alerts:
+              - exp_labels:
+                  severity: warning
+                  origin: cluster
+                  name: node0
+                  address: Gt6HqWBhdu4Sy1u8ASTbS1qf2Ac5gwdegwr8tWN8saMxPt5
+                  network: kusama
+                exp_annotations:
+                    message: 'Blocks were not produced for 1 hour by <a href="https://kusama.subscan.io/account/Gt6HqWBhdu4Sy1u8ASTbS1qf2Ac5gwdegwr8tWN8saMxPt5">node0</a>'
+                    runbook_url: "https://github.com/w3f/infrastructure/wiki/Producer-Stall"
+          - eval_time: 65m
+            alertname: ProducerStallLong
+          - eval_time: 185m 
+            alertname: ProducerStallShort
+            exp_alerts:
+              - exp_labels:
+                  severity: warning
+                  origin: cluster
+                  name: node0
+                  address: Gt6HqWBhdu4Sy1u8ASTbS1qf2Ac5gwdegwr8tWN8saMxPt5
+                  network: kusama
+                exp_annotations:
+                    message: 'Blocks were not produced for 1 hour by <a href="https://kusama.subscan.io/account/Gt6HqWBhdu4Sy1u8ASTbS1qf2Ac5gwdegwr8tWN8saMxPt5">node0</a>'
+                    runbook_url: "https://github.com/w3f/infrastructure/wiki/Producer-Stall"  
+          - eval_time: 185m 
+            alertname: ProducerStallLong
+            exp_alerts:
+              - exp_labels:
+                  severity: critical
+                  origin: cluster
+                  name: node0
+                  address: Gt6HqWBhdu4Sy1u8ASTbS1qf2Ac5gwdegwr8tWN8saMxPt5
+                  network: kusama
+                exp_annotations:
+                    message: 'Blocks were not produced for 3 hours by <a href="https://kusama.subscan.io/account/Gt6HqWBhdu4Sy1u8ASTbS1qf2Ac5gwdegwr8tWN8saMxPt5">node0</a>'
+                    runbook_url: "https://github.com/w3f/infrastructure/wiki/Producer-Stall"  
+          - eval_time: 200m
+            alertname: ProducerStallShort
+            exp_alerts:
+          - eval_time: 200m
+            alertname: ProducerStallLong                  
