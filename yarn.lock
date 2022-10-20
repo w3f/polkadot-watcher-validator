@@ -794,10 +794,10 @@
   dependencies:
     winston "^3.3.3"
 
-"@w3f/test-utils@^1.2.30":
-  version "1.2.30"
-  resolved "https://registry.yarnpkg.com/@w3f/test-utils/-/test-utils-1.2.30.tgz#8eacbc00606ffbbf26c3ea8fa9f6402df63f8cf4"
-  integrity sha512-x+tWKRRMaLSz7kv+4BepXMfEq6SvYpWq09DvXxCJ5G7TcsExG0e0nCFPp1v3ynda61z1QB0QPHmNB3uWllIPsw==
+"@w3f/test-utils@^1.2.31":
+  version "1.2.31"
+  resolved "https://registry.yarnpkg.com/@w3f/test-utils/-/test-utils-1.2.31.tgz#573312f4ebbe50b683f421b4133ce2810b020ce2"
+  integrity sha512-BNPKTVBfZG+DHQMtNQuQq1JiR26O4xSzja7kJOMECLaftIgcTn2MmSzfAl0FgUNfHDP0zzDvpU6JI/on1LpWlQ==
   dependencies:
     "@polkadot/api" "^9.4.2"
     "@w3f/logger" "^0.4.2"
