@@ -3,21 +3,19 @@ updates:
 - package-ecosystem: npm
   directory: "/"
   schedule:
-    interval: daily
+    interval: weekly
   open-pull-requests-limit: 10
   reviewers:
    - "w3f/infrastructure"
   ignore:
    - dependency-name: "*"
-     update-types: ["version-update:semver-major"]
+     update-types: ["version-update:semver-minor","version-update:semver-patch"] 
 
 - package-ecosystem: docker
   directory: "/"
   schedule:
-    interval: daily
-  open-pull-requests-limit: 10    
-  reviewers:
-   - "w3f/infrastructure" 
+    interval: weekly
+  open-pull-requests-limit: 10     
   ignore:
   - dependency-name: "*"
-    update-types: ["version-update:semver-major"]
+    update-types: ["version-update:semver-minor","version-update:semver-patch"] 

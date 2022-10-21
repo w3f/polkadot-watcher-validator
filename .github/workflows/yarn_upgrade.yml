@@ -1,0 +1,11 @@
+name: 'Yarn Upgrade'
+on:
+  schedule:
+    - cron:  '0 10 * * 1'
+  workflow_dispatch:
+
+jobs:
+  yarn-upgrade:
+    uses: w3f/base-services-charts/.github/workflows/yarn_upgrade.yml@master
+    secrets:
+      PR_PAT: ${{ secrets.BOT_PAT }}
