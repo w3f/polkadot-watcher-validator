@@ -110,7 +110,7 @@ export class Prometheus implements PromClient {
           help: 'Whether a validator is reported as outside of the current Era validators active set',
           labelNames: ['network', 'name', 'address', 'environment']
         });
-        this.payeeChangedReports = new promClient.Gauge({
+        this.payeeChangedReports = new promClient.Counter({
           name: 'polkadot_validator_payee_changed_reports',
           help: 'Times a validator has changed the payee destination',
           labelNames: ['network', 'name', 'address', 'environment']
@@ -120,7 +120,7 @@ export class Prometheus implements PromClient {
           help: 'Whether a validator has an unexpected payee destination',
           labelNames: ['network', 'name', 'address', 'environment']
         });
-        this.commissionChangedReports = new promClient.Gauge({
+        this.commissionChangedReports = new promClient.Counter({
           name: 'polkadot_validator_commission_changed_reports',
           help: 'Times a validator has changed the commission rate',
           labelNames: ['network', 'name', 'address', 'environment']
