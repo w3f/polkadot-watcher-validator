@@ -50,6 +50,12 @@ If an expected destination address is specified in the config file, it is implic
 
 A sample config file is provided [here](config/main.sample.yaml)
 
+### Validators from Git
+
+The list of your addresses can be dynamically retrieved (app startup/restart) from a Git file. Check the [GitConfigLoader](src/gitConfigLoader) implementation.  
+
+- [GitLab API](https://docs.gitlab.com/ee/api/repository_files.html)
+
 ### Prometheus
 
 A Prometheus instance can be attached to this application thanks to the endpoint exposed at [/metrics](https://github.com/w3f/polkadot-watcher-validator/blob/master/src/prometheus.ts#L114).  
