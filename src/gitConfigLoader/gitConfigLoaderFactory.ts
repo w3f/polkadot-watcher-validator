@@ -16,6 +16,7 @@ export class GitConfigLoaderFactory {
       case "gitlab":
         if(gitConfig.private.enabled) return new GitLabPrivate(gitConfig.url,gitConfig.private.apiToken,gitConfig.network) //implemented just GitLab private for now
         else new Disabled()
+        break;
       default:
         return new Disabled()
     }  
