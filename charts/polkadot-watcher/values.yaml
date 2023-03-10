@@ -15,7 +15,7 @@ config:
       enabled: true
       apiToken: xxx
     network: kusama
-    url: http://your.gitlab.domain/api/v4/projects/number/repository/files/accounts.yaml/raw?ref=main"
+    url: http://your.gitlab.domain/api/v4/projects/number/repository/files/accounts.yaml/raw?ref=main
 
 serviceMonitor:
   enabled: true #to be enabled for each instance
