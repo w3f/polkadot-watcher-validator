@@ -7,6 +7,7 @@ import { Prometheus } from '../prometheus';
 import { InputConfig } from '../types';
 import { Client } from '../client';
 import { environment } from '../constants';
+import { GitConfigLoaderFactory } from '../gitConfigLoader/gitConfigLoaderFactory';
 
 const _addTestEndpoint = (server: express.Application, subscriber: Subscriber): void =>{
  
@@ -17,9 +18,24 @@ const _addTestEndpoint = (server: express.Application, subscriber: Subscriber): 
       })
 }
 
-export async function startAction(cmd): Promise<void> {
-    const cfg = new Config<InputConfig>().parse(cmd.config);
+const _loadConfig = async (config: any): Promise<InputConfig> =>{
+    const cfg = new Config<InputConfig>().parse(config);
+    const gitList = await new GitConfigLoaderFactory(cfg).makeGitConfigLoader().downloadAndLoad();
 
+    const seen = new Set();
+    if(!cfg.validators) cfg.validators = []
+    const filteredArr = [...cfg.validators,...gitList].filter(el=>{ //priority given to locals over downloaded ones
+        const isDuplicate = seen.has(el.name);
+        seen.add(el.name)
+        return !isDuplicate
+    })
+    cfg.validators = filteredArr
+    return cfg
+}
+
+export async function startAction(cmd): Promise<void> {
+    const cfg = await _loadConfig(cmd.config)
+    
     const server = express();
     server.get('/healthcheck',
         async (req: express.Request, res: express.Response): Promise<void> => {

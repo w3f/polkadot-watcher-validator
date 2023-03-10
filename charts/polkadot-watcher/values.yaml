@@ -7,7 +7,15 @@ config:
   port: 3000
   logLevel: info
   environment: production #it is used also to filter the prometheusrules, i.e. to avoid conflicts between production and staging
-  validators: []
+  validators: [] #optional
+  validatorFromGit: #optional
+    enabled: false
+    platform: gitLab
+    private: 
+      enabled: true
+      apiToken: xxx
+    network: kusama
+    url: http://your.gitlab.domain/api/v4/projects/number/repository/files/accounts.yaml/raw?ref=main"
 
 serviceMonitor:
   enabled: true #to be enabled for each instance

@@ -16,7 +16,22 @@ export interface InputConfig {
     environment: string;
     port: number;
     endpoint: string;
-    validators: Array<Subscribable>;
+    validators?: Array<Subscribable>;
+    validatorsFromGit?: {
+        enabled: boolean;
+        platform: string;
+        private: {
+            enabled: boolean;
+            apiToken: string;
+        };
+        network: string;
+        url: string;
+    };
+}
+
+export interface InputConfigFromGit {
+    Kusama: Array<Subscribable>;
+    Polkadot: Array<Subscribable>;
 }
 
 export interface PromClient {
