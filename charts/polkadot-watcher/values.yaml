@@ -8,7 +8,7 @@ config:
   logLevel: info
   environment: production #it is used also to filter the prometheusrules, i.e. to avoid conflicts between production and staging
   validators: [] #optional
-  validatorFromGit: #optional
+  validatorsFromGit: #optional
     enabled: false
     platform: gitLab
     private: 
