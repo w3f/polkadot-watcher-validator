@@ -2,7 +2,7 @@ endpoint: "wss://kusama-rpc.polkadot.io/"
 port: 3000
 logLevel: info
 environment: production
-validatorFromGit: #optional
+validatorsFromGit: #optional
   enabled: false
   platform: gitLab
   private: 
