@@ -9,7 +9,7 @@ validatorsFromGit: #optional
     enabled: true
     apiToken: xxx
   network: kusama
-  url: http://your.gitlab.domain/api/v4/projects/number/repository/files/accounts.yaml/raw?ref=main"
+  url: http://your.gitlab.domain/api/v4/projects/number/repository/files/accounts.yaml/raw?ref=main
 validators: #optional
 - name: test
   address: Gt6HqWBhdu4Sy1u8ASTbS1qf2Ac5gwdegwr8tWN8saMxPt5
