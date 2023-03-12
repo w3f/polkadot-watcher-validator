@@ -78,7 +78,7 @@ export class Prometheus implements PromClient {
     }
 
     increaseCommissionChangedReports(name: string, address: string): void{
-      this.commissionChangedReports.inc({network:this.network, name, address, environment: this.environment}, 0);
+      this.commissionChangedReports.inc({network:this.network, name, address, environment: this.environment});
     }
 
     setStatusValidatorCommissionUnexpected(name: string, address: string): void{
