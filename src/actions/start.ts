@@ -36,6 +36,9 @@ const _loadConfig = async (config: any): Promise<InputConfig> =>{
 export async function startAction(cmd): Promise<void> {
     const cfg = await _loadConfig(cmd.config)
     
+    const logger = LoggerSingleton.getInstance(cfg.logLevel)
+    logger.info(`loaded ${cfg.targets.length} accounts`)
+    
     const server = express();
     server.get('/healthcheck',
         async (req: express.Request, res: express.Response): Promise<void> => {
@@ -46,8 +49,6 @@ export async function startAction(cmd): Promise<void> {
             res.end(await register.metrics())
         })    
     server.listen(cfg.port);
-
-    LoggerSingleton.setInstance(cfg.logLevel)
     
     const api = await new Client(cfg).connect()
     const chain = await api.rpc.system.chain()
