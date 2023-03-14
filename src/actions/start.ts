@@ -37,7 +37,7 @@ export async function startAction(cmd): Promise<void> {
     const cfg = await _loadConfig(cmd.config)
     
     const logger = LoggerSingleton.getInstance(cfg.logLevel)
-    logger.info(`loaded ${cfg.targets.length} accounts`)
+    logger.info(`loaded ${cfg.validators.length} accounts`)
     
     const server = express();
     server.get('/healthcheck',
