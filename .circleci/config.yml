@@ -4,9 +4,9 @@ jobs:
   unitTest:
     docker:
       - image: web3f/node-dind:v3
-      - image: parity/polkadot:latest
+      - image: parity/polkadot:v1.1.0
         name: polkadot
-        command: --chain=kusama-dev --alice --rpc-external --rpc-methods=Unsafe --rpc-cors=all
+        command: --chain=kusama-dev --rpc-port 11000 --alice --rpc-external --rpc-methods=Unsafe --rpc-cors=all
     steps:
       - checkout
       - run: yarn
