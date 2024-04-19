@@ -6,7 +6,7 @@ jobs:
       - image: web3f/node-dind:v3
       - image: parity/polkadot:latest
         name: polkadot
-        command: --chain=kusama-dev --ws-port 11000 --alice --ws-external --rpc-methods=Unsafe --rpc-cors=all
+        command: --chain=kusama-dev --alice --ws-external --rpc-methods=Unsafe --rpc-cors=all
     steps:
       - checkout
       - run: yarn
