@@ -15,7 +15,7 @@ import { KeyringPair } from '@polkadot/keyring/types';
 
 should();
 
-let alice: KeyringPair
+let alice: any //should be KeyringPair 
 let keyring: Keyring
 
 const cfg = {
