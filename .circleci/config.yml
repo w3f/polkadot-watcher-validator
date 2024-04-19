@@ -3,7 +3,7 @@ version: 2
 jobs:
   unitTest:
     docker:
-      - image: web3f/node-dind:v1
+      - image: web3f/node-dind:v3
       - image: parity/polkadot:latest
         name: polkadot
         command: --chain=kusama-dev --ws-port 11000 --alice --ws-external --rpc-methods=Unsafe --rpc-cors=all
@@ -15,7 +15,7 @@ jobs:
 
   yarnLint:
     docker:
-      - image: web3f/node-dind:v1
+      - image: web3f/node-dind:v3
     steps:
       - checkout
       - run: yarn
