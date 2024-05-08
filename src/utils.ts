@@ -26,6 +26,8 @@ export const getActiveEraIndex = async (api: ApiPromise): Promise<number> => {
 }
 
 export const isHeadAfterHeartbeatBlockThreshold = async (api: ApiPromise, header: Header): Promise<boolean> => {
+  return false
+  //I'm online pallet got removed: https://github.com/paritytech/polkadot-sdk/issues/4359
   const currentBlock = header.number.toBn()
   const blockThreshold = await api.query.imOnline.heartbeatAfter() //threshold after which an heartbeat is expected
   logger.debug(`Current Block: ${currentBlock}\tHeartbeatBlock Threshold: ${blockThreshold}`);
@@ -39,11 +41,15 @@ export async function asyncForEach<T>(array: Array<T>, callback: (arg0: T, arg1:
 }
 
 const _hasValidatorAuthoredBlocks = async (validator: Subscribable, sessionIndex: SessionIndex, api: ApiPromise): Promise<boolean> => {
+  return true
+  //I'm online pallet got removed: https://github.com/paritytech/polkadot-sdk/issues/4359
   const numBlocksAuthored = await api.query.imOnline.authoredBlocks(sessionIndex,validator.address)
   return numBlocksAuthored.cmp(ZeroBN) > 0
 }
 
 const _hasValidatorSentHeartbeats = async (validatorIndex: number, sessionIndex: SessionIndex, api: ApiPromise): Promise<boolean> => {
+  return true
+  //I'm online pallet got removed: https://github.com/paritytech/polkadot-sdk/issues/4359
   if (validatorIndex < 0) return false;
   const hb = await api.query.imOnline.receivedHeartbeats(sessionIndex,validatorIndex) 
   return hb.toHuman() ? true : false

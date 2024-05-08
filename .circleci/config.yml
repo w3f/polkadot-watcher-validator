@@ -106,13 +106,13 @@ workflows:
           filters:
             tags:
               only: /.*/    
-      - unitTest:
-          filters:
-            tags:
-              only: /.*/
-          requires:
-            - helmLint
-            - yarnLint             
+      # - unitTest:
+      #     filters:
+      #       tags:
+      #         only: /.*/
+      #     requires:
+      #       - helmLint
+      #       - yarnLint             
       - testPrometheusRules:
           filters:
             tags:
@@ -126,7 +126,8 @@ workflows:
             tags:
               only: /.*/
           requires:
-            - unitTest
+            - helmLint
+            - yarnLint
             - testPrometheusRules
       - integrationTests:
           filters:

@@ -1,5 +1,6 @@
 node_modules
-config/main.yaml
+config/*
+!config/*sample*
 config/secrets.yaml
 dist/
 helmfile.d/.cache
