@@ -1,6 +1,6 @@
 {
   "name": "polkadot-watcher",
-  "version": "4.4.2",
+  "version": "4.4.3",
   "description": "Monitor events on Polkadot networks",
   "repository": "git@github.com:w3f/polkadot-watcher.git",
   "author": "W3F Infrastructure Team <devops@web3.foundation>",
@@ -20,7 +20,7 @@
     "start": "node ./dist/index.js start"
   },
   "dependencies": {
-    "@polkadot/api": "^11.0.2",
+    "@polkadot/api": "^11.2.1",
     "@w3f/config": "^0.1.1",
     "@w3f/logger": "^0.4.2",
     "commander": "^4.0.0",
