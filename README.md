@@ -1,6 +1,5 @@
 [![CircleCI](https://circleci.com/gh/w3f/polkadot-watcher-validator.svg?style=svg)](https://circleci.com/gh/w3f/polkadot-watcher-validator)
 
-
 # polkadot-watcher-validator
 
 ## How to Run 
