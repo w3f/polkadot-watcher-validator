@@ -238,7 +238,7 @@ export class Subscriber {
 
     private _initCounterMetrics(): void {
       this._initBlocksProducedMetrics();
-      this._initOfflineReportsMetrics()
+      this._initSlashedReportsMetrics()
       this._initPayeeChangedMetrics();
       this._initCommissionChangedMetrics();
     }
@@ -251,7 +251,7 @@ export class Subscriber {
       });
     }
 
-    private _initOfflineReportsMetrics(): void {
+    private _initSlashedReportsMetrics(): void {
       this.validators.forEach((account) => {
         // always increase counters even the first time, so that we initialize the time series
         // https://github.com/prometheus/prometheus/issues/1673
