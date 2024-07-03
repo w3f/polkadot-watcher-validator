@@ -9,9 +9,8 @@ import {
     InputConfig,
     Subscribable,
     PromClient,
-    ValidatorImOnlineParameters
 } from './types';
-import { getActiveEraIndex, isHeadAfterHeartbeatBlockThreshold, hasValidatorProvedOnline, isNewSessionEvent, isOfflineEvent } from './utils';
+import { getActiveEraIndex } from './utils';
 
 export class Subscriber {
     private validators: Array<Subscribable>;
@@ -40,7 +39,7 @@ export class Subscriber {
 
     public triggerConnectivityTest(): void {
       const testAccountName = "CONNECTIVITY_TEST_NO_ACTION_REQUIRED"
-      this.promClient.increaseOfflineReports(testAccountName,testAccountName);
+      this.promClient.increaseSlashedReports(testAccountName,testAccountName);
     }
 
     private async _initInstanceVariables(): Promise<void>{
@@ -60,7 +59,7 @@ export class Subscriber {
     private async _handleNewHeadSubscriptions(): Promise<void> {
       this.api.rpc.chain.subscribeNewHeads(async (header) => {
         this._producerHandler(header);
-        this._validatorStatusHandler(header);
+        this._validatorStatusHandler();
         this._payeeChangeHandler(header);
         this._commissionChangeHandler(header);
         this._checkUnexpected();
@@ -98,11 +97,11 @@ export class Subscriber {
           events.forEach(async (record) => {
               const { event } = record;
 
-              if(isOfflineEvent(event)){
-                  this._offlineEventHandler(event)
+              if(this.api.events.staking.SlashReported.is(event)){
+                  this._slashedEventHandler(event)
               }
 
-              if(isNewSessionEvent(event)){
+              if(this.api.events.session.NewSession.is(event)){
                 await this._newSessionEventHandler()
               }
           });
@@ -123,18 +122,16 @@ export class Subscriber {
       }
     }
 
-    private async _validatorStatusHandler(header: Header): Promise<void> {
-      const parameters = await this._getImOnlineParametersAtomic(header)
+    private async _validatorStatusHandler(): Promise<void> {
 
       this.validators.forEach(async account => {
 
-        const validatorActiveSetIndex = parameters.validatorActiveSet.indexOf(account.address)
+        const validatorActiveSetIndex = this.validatorActiveSet.indexOf(account.address)
         if ( validatorActiveSetIndex < 0 ) {
-          this.logger.debug(`Target ${account.name} is not present in the validation active set of era ${parameters.eraIndex}`);
+          this.logger.debug(`Target ${account.name} is not present in the validation active set of era ${this.currentEraIndex}`);
           this.promClient.setStatusOutOfActiveSet(account.name,account.address);
         } else {
           this.promClient.resetStatusOutOfActiveSet(account.name,account.address);
-          await this._checkOfflineRiskStatus(parameters,account,validatorActiveSetIndex)
         }
       }) 
       
@@ -208,28 +205,18 @@ export class Subscriber {
       }
     }
 
-    private async _checkOfflineRiskStatus(parameters: ValidatorImOnlineParameters,validator: Subscribable,validatorActiveSetIndex: number): Promise<void>{
-      if ( await hasValidatorProvedOnline(validator,validatorActiveSetIndex,parameters.sessionIndex,this.api) ) {
-        this.promClient.resetStatusOfflineRisk(validator.name,validator.address);
-      } else if(parameters.isHeartbeatExpected) {
-        this.logger.info(`Target ${validator.name} has either not authored any block or sent any heartbeat yet in session:${parameters.sessionIndex}/era:${parameters.eraIndex}`);
-        this.promClient.setStatusOfflineRisk(validator.name,validator.address);
-      }
-      // else let it be as it is.
-      // with this solution, if a validator has been caught offline, it will eventually remain in a risk status also for the first half of the subsequent session.
-    }
-
-    private _offlineEventHandler(event: Event): void {
+    private _slashedEventHandler(event: Event): void {
+      
       const items = event.data[0];
 
       (items as Tuple).forEach((item) => {
-          const offlineValidator = item[0];
-          this.logger.debug(`${offlineValidator} found offline`);
-          const account = this.validators.find((subject) => subject.address == offlineValidator);
+          const validator = item[0];
+          this.logger.debug(`${validator} has been reported for Slash`);
+          const account = this.validators.find((subject) => subject.address == validator);
 
           if (account) {
-              this.logger.info(`Really bad... Target ${account.name} found offline`);
-              this.promClient.increaseOfflineReports(account.name, account.address);
+              this.logger.info(`Really bad... Target ${account.name} has been reported for Slash`);
+              this.promClient.increaseSlashedReports(account.name, account.address);
           }
       });
     }
@@ -249,25 +236,9 @@ export class Subscriber {
       await this._initValidatorsControllers();
     }
 
-    private async _getImOnlineParametersAtomic(header: Header): Promise<ValidatorImOnlineParameters> {
-    
-      const sessionIndex = this.sessionIndex
-      const eraIndex = this.currentEraIndex
-      const validatorActiveSet = this.validatorActiveSet
-      this.logger.debug(`Current EraIndex: ${eraIndex}\tCurrent SessionIndex: ${sessionIndex}`);
-      const isHeartbeatExpected = await isHeadAfterHeartbeatBlockThreshold(this.api,header)
-
-      return {
-        isHeartbeatExpected,
-        sessionIndex,
-        eraIndex,
-        validatorActiveSet
-      } 
-    }
-
     private _initCounterMetrics(): void {
       this._initBlocksProducedMetrics();
-      this._initOfflineReportsMetrics()
+      this._initSlashedReportsMetrics()
       this._initPayeeChangedMetrics();
       this._initCommissionChangedMetrics();
     }
@@ -280,11 +251,11 @@ export class Subscriber {
       });
     }
 
-    private _initOfflineReportsMetrics(): void {
+    private _initSlashedReportsMetrics(): void {
       this.validators.forEach((account) => {
         // always increase counters even the first time, so that we initialize the time series
         // https://github.com/prometheus/prometheus/issues/1673
-        this.promClient.increaseOfflineReports(account.name, account.address);
+        this.promClient.increaseSlashedReports(account.name, account.address);
       });
     }
 
