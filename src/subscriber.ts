@@ -2,7 +2,7 @@ import { ApiPromise } from '@polkadot/api';
 import { Event } from '@polkadot/types/interfaces/system';
 import { Header, SessionIndex, ValidatorId, Address } from '@polkadot/types/interfaces';
 import { DeriveStakingQuery } from '@polkadot/api-derive/types';
-import { Tuple, Vec } from '@polkadot/types/codec';
+import { Vec } from '@polkadot/types/codec';
 import { LoggerSingleton } from './logger';
 
 import {
@@ -206,19 +206,15 @@ export class Subscriber {
     }
 
     private _slashedEventHandler(event: Event): void {
+      const validator = event.data[0].toString();
       
-      const items = event.data[0];
+      this.logger.debug(`${validator} has been reported for Slash`);
+      const account = this.validators.find((subject) => subject.address == validator);
 
-      (items as Tuple).forEach((item) => {
-          const validator = item[0];
-          this.logger.debug(`${validator} has been reported for Slash`);
-          const account = this.validators.find((subject) => subject.address == validator);
-
-          if (account) {
-              this.logger.info(`Really bad... Target ${account.name} has been reported for Slash`);
-              this.promClient.increaseSlashedReports(account.name, account.address);
-          }
-      });
+      if (account) {
+          this.logger.info(`Really bad... Target ${account.name} has been reported for Slash`);
+          this.promClient.increaseSlashedReports(account.name, account.address);
+      }
     }
 
     private async _newSessionEventHandler(): Promise<void> {
