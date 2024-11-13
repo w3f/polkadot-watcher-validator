@@ -17,6 +17,7 @@ export interface InputConfig {
     port: number;
     endpoint: string;
     validators?: Array<Subscribable>;
+    commissionLogic?: string;
     validatorsFromGit?: {
         enabled: boolean;
         platform: string;

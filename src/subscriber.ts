@@ -21,7 +21,7 @@ export class Subscriber {
     private readonly logger = LoggerSingleton.getInstance()
 
     constructor(
-        cfg: InputConfig,
+        private readonly cfg: InputConfig,
         private readonly api: ApiPromise,
         private readonly promClient: PromClient) {
 
@@ -70,22 +70,53 @@ export class Subscriber {
       const tmp = await this.api.derive.staking.queryMulti(this.validators.map(v=>v.address),{withDestination:true,withPrefs:true})
       const stakingMap = new Map<string,DeriveStakingQuery>()
       tmp.forEach(t=>stakingMap.set(t.accountId.toString(),t))
-
       this.validators.forEach(v => {
+        let isOkCommission = true
         const actualCommission = stakingMap.get(v.address).validatorPrefs.commission.toNumber() //expressed in ppb
-        if(!v.expected?.commission || v.expected.commission*10000000 == actualCommission){ //percentage to ppb conversion
+        if(v.expected?.commission){
+          isOkCommission = false
+          switch (this.cfg.commissionLogic) {
+            case "lt":
+              isOkCommission = actualCommission <= v.expected.commission*10000000
+              break;
+            default:
+              isOkCommission = actualCommission == v.expected.commission*10000000 
+          }
+        }
+        if(isOkCommission)
           this.promClient.resetStatusValidatorCommissionUnexpected(v.name,v.address)
-        } else {
+        else {
           this.logger.info(`Detected Unexpected commission for validator ${v.name}: expected percentage ${v.expected.commission}, actual in ppb ${actualCommission}`)
           this.promClient.setStatusValidatorCommissionUnexpected(v.name,v.address)
         }
 
+        let isOkPayee = true
         const actualRewardDestination = stakingMap.get(v.address).rewardDestination
-        if(v.expected?.payee && (!actualRewardDestination.isAccount || v.expected.payee != actualRewardDestination.asAccount.toString())){
+        if(v.expected?.payee){
+          isOkPayee = false
+          switch (v.expected.payee) {
+            case "Staked":
+              isOkPayee = actualRewardDestination.isStaked
+              break;
+            case "Stash":
+              isOkPayee = actualRewardDestination.isStash
+              break; 
+            case "Controller":
+              isOkPayee = actualRewardDestination.isController
+              break;   
+            case "None":
+              isOkPayee = actualRewardDestination.isNone
+              break;        
+            default:
+              isOkPayee = actualRewardDestination.isAccount && v.expected.payee == actualRewardDestination.asAccount.toString()
+              break;
+          }
+        }
+        if(isOkPayee){
+          this.promClient.resetStatusValidatorPayeeUnexpected(v.name,v.address)
+        } else {
           this.logger.info(`Detected Unexpected payee for validator ${v.name}: expected ${v.expected.payee}, actual ${JSON.stringify(actualRewardDestination)}`)
           this.promClient.setStatusValidatorPayeeUnexpected(v.name,v.address)
-        } else {
-          this.promClient.resetStatusValidatorPayeeUnexpected(v.name,v.address)
         }
       })
     }
