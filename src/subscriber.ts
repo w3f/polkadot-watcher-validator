@@ -96,19 +96,19 @@ export class Subscriber {
           isOkPayee = false
           switch (v.expected.payee) {
             case "Staked":
-              isOkPayee = actualRewardDestination.isStaked
+              isOkPayee = actualRewardDestination?.isStaked
               break;
             case "Stash":
-              isOkPayee = actualRewardDestination.isStash
+              isOkPayee = actualRewardDestination?.isStash
               break; 
             case "Controller":
-              isOkPayee = actualRewardDestination.isController
+              isOkPayee = actualRewardDestination?.isController
               break;   
             case "None":
-              isOkPayee = actualRewardDestination.isNone
+              isOkPayee = actualRewardDestination?.isNone
               break;        
             default:
-              isOkPayee = actualRewardDestination.isAccount && v.expected.payee == actualRewardDestination.asAccount.toString()
+              isOkPayee = actualRewardDestination?.isAccount && v.expected.payee == actualRewardDestination?.asAccount.toString()
               break;
           }
         }
