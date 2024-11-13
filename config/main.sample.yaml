@@ -2,6 +2,7 @@ endpoint: "wss://kusama-rpc.polkadot.io/"
 port: 3000
 logLevel: info
 environment: production
+commissionLogic: eq #optional | lt | eq
 validatorsFromGit: #optional
   enabled: false
   platform: gitLab
@@ -15,4 +16,4 @@ validators: #optional
   address: Gt6HqWBhdu4Sy1u8ASTbS1qf2Ac5gwdegwr8tWN8saMxPt5
   expected: #optional
     commission: 0.17 #optional
-    payee: Gt6HqWBhdu4Sy1u8ASTbS1qf2Ac5gwdegwr8tWN8saMxPt5 #optional
+    payee: Gt6HqWBhdu4Sy1u8ASTbS1qf2Ac5gwdegwr8tWN8saMxPt5 #optional | Staked | Stash | Controller | None
