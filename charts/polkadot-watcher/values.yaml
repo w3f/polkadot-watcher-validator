@@ -29,6 +29,7 @@ prometheusRules:
     app: w3f
   origin: cluster  
   producerStall: true 
+  changed: true
 
 resources:
   requests:
